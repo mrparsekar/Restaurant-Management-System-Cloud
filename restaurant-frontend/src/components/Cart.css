@@ -1,0 +1,136 @@
+/* General Styles to match homepage theme */
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+}
+
+.cart-container {
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.cart-container h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.cart-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.cart-details {
+  flex: 1;
+  margin-left: 15px;
+}
+
+.cart-details h4 {
+  font-size: 1.2rem;
+  margin: 0;
+  color: #444;
+}
+
+.cart-details p {
+  color: #555;
+  margin: 5px 0;
+}
+
+.remove-btn {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.remove-btn:hover {
+  background-color: #e60000;
+}
+
+.total-price {
+  text-align: right;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+.order-form {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.input-field:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.order-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff;
+  color: white;
+  text-align: center;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.order-btn:hover {
+  background-color: #0056b3;
+}
+
+.empty-cart {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #777;
+  margin-top: 20px;
+}
+
+/* Loader styles */
+.loader {
+  border: 4px solid #f3f3f3; /* Light background */
+  border-top: 4px solid #007bff; /* Blue color */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

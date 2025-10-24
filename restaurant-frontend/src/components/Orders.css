@@ -1,0 +1,110 @@
+/* Orders Page */
+.orders-container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+  }
+  
+  .orders-container h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 30px;
+  }
+  
+  .order-card {
+    border: 1px solid #ddd;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background-color: #f9f9f9;
+  }
+  
+  .order-card h3 {
+    font-size: 1.5rem;
+    color: #333;
+  }
+  
+  .order-card p {
+    color: #555;
+    font-size: 1.1rem;
+  }
+  
+  .order-card .order-status {
+    font-weight: bold;
+    color: #ff4d4d;
+  }
+  
+  .order-card .ordered-items {
+    margin-top: 15px;
+    list-style-type: none;
+    padding-left: 0;
+  }
+  
+  .order-card .ordered-items li {
+    font-size: 1.1rem;
+    color: #333;
+  }
+  
+  .order-card .ordered-items li span {
+    font-weight: bold;
+  }
+  
+  .order-card .total-price {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-top: 20px;
+    color: #333;
+  }
+  
+  .input-group {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .input-group input {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    outline: none;
+  }
+  
+  .input-group button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .input-group button:hover {
+    background-color: #0056b3;
+  }
+  
+  .loading-indicator {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #777;
+    margin-top: 20px;
+  }
+  
+  .no-orders-message {
+    text-align: center;
+    font-size: 1.2rem;
+    color: #777;
+    margin-top: 20px;
+  }
+  
+  .order-card .order-time {
+    font-size: 0.9rem;
+    color: #aaa;
+  }
+  

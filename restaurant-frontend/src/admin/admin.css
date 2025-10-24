@@ -1,0 +1,56 @@
+/* src/admin/admin.css */
+
+.admin-navbar {
+  background-color: #222;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.admin-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #f5c518;
+  margin: 0;
+}
+
+.admin-links {
+  list-style: none;
+  display: flex;
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-links li a {
+  color: #ddd;
+  text-decoration: none;
+  font-size: 16px;
+  transition: color 0.3s ease;
+}
+
+.admin-links li a:hover {
+  color: #f5c518;
+}
+
+.logout-btn {
+  background-color: #f51818;
+  color: #ffffff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.logout-btn:hover {
+  background-color: #e0b000;
+}
