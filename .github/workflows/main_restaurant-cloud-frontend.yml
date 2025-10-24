@@ -13,26 +13,21 @@ jobs:
       contents: read
 
     steps:
-      # 1️⃣ Checkout repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node.js
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
           node-version: '22.x'
 
-      # 3️⃣ Install frontend dependencies
       - name: Install dependencies
         working-directory: restaurant-frontend
         run: npm install
 
-      # 4️⃣ Build React frontend
       - name: Build frontend
         working-directory: restaurant-frontend
         run: npm run build
 
-      # 5️⃣ Upload build artifact
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
@@ -47,23 +42,21 @@ jobs:
       id-token: write
 
     steps:
-      # 1️⃣ Download build artifact
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: react-build
+          path: build_artifact   # <-- specify a folder for downloaded artifact
 
-      # 2️⃣ Azure login using Service Principal JSON secret
       - name: Login to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # 3️⃣ Deploy to Azure Web App
       - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'restaurant-cloud-frontend'
           slot-name: 'Production'
-          package: restaurant-frontend/build
+          package: build_artifact   # <-- deploy from the folder where artifact is downloaded
