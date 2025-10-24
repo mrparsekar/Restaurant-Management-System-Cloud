@@ -46,7 +46,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: react-build
-          path: build_artifact   # <-- specify a folder for downloaded artifact
+          path: build_artifact
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -54,9 +54,9 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Web App
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'restaurant-cloud-frontend'
           slot-name: 'Production'
-          package: build_artifact   # <-- deploy from the folder where artifact is downloaded
+          package: build_artifact
+          type: zip  # <-- important: tells Azure this is a pre-built package
