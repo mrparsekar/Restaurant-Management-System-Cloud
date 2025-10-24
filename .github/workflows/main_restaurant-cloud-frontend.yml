@@ -7,56 +7,50 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22.x'
-
-      - name: Install dependencies
-        working-directory: restaurant-frontend
-        run: npm install
-
-      - name: Build frontend
-        working-directory: restaurant-frontend
-        run: npm run build
-
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: react-build
-          path: restaurant-frontend/build
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
     permissions:
       contents: read
       id-token: write
 
     steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: react-build
-          path: build_artifact
+      # 1️⃣ Checkout repository
+      - uses: actions/checkout@v4
 
+      # 2️⃣ Setup Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+
+      # 3️⃣ Install frontend dependencies
+      - name: Install dependencies
+        working-directory: restaurant-frontend
+        run: npm install
+
+      # 4️⃣ Build React frontend
+      - name: Build frontend
+        working-directory: restaurant-frontend
+        run: npm run build
+
+      # 5️⃣ Zip the build folder
+      - name: Zip build folder
+        run: |
+          cd restaurant-frontend
+          zip -r ../react-build.zip build
+        shell: bash
+
+      # 6️⃣ Login to Azure
       - name: Login to Azure
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      # 7️⃣ Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'restaurant-cloud-frontend'
           slot-name: 'Production'
-          package: build_artifact
-          type: zip  # <-- important: tells Azure this is a pre-built package
+          package: react-build.zip
+          type: zip
