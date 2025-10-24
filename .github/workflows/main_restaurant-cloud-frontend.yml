@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - restaurant-cloud-frontend
+name: Build and deploy React app to Azure Web App - restaurant-cloud-frontend
 
 on:
   push:
@@ -25,20 +25,22 @@ jobs:
         with:
           node-version: '22.x'
 
-      # 3️⃣ Install frontend dependencies (assuming package.json is in root)
+      # 3️⃣ Install frontend dependencies
       - name: Install dependencies
+        working-directory: restaurant-frontend  # <-- replace with your frontend folder name
         run: npm install
 
       # 4️⃣ Build React frontend
       - name: Build frontend
+        working-directory: restaurant-frontend
         run: npm run build
 
       # 5️⃣ Upload build artifact
-      - name: Upload artifact for deployment job
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
-          path: build
+          name: react-build
+          path: restaurant-frontend/build  # Upload the build folder
 
   deploy:
     runs-on: ubuntu-latest
@@ -49,10 +51,10 @@ jobs:
 
     steps:
       # 1️⃣ Download build artifact
-      - name: Download artifact from build job
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: node-app
+          name: react-build
 
       # 2️⃣ Azure login using Service Principal
       - name: Login to Azure
@@ -70,4 +72,4 @@ jobs:
         with:
           app-name: 'restaurant-cloud-frontend'
           slot-name: 'Production'
-          package: ./node-app
+          package: restaurant-frontend/build
