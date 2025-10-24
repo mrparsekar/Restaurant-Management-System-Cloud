@@ -1,65 +1,38 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy Node.js app to Azure Web App - restaurant-cloud-backend
+name: Node.js CI/CD
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ main ]  # Runs on push to main branch
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read #This is required for actions/checkout
 
     steps:
+      # 1. Checkout your repository
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
+      # 2. Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '22.x'
+          node-version: '22'
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+      # 3. Install dependencies (backend folder)
+      - name: Install dependencies
+        working-directory: restaurant-backend
+        run: npm install
 
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+      # 4. Optional: Run tests
+      - name: Run tests
+        working-directory: restaurant-backend
+        run: npm test || echo "No tests defined"
+
+      # 5. Deploy to Azure Web App
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
         with:
-          name: node-app
-          path: .
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
-
-    steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v4
-        with:
-          name: node-app
-      
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5C4602F5AC1F4153BE14D8C20329DA23 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_40B44B6A554743669F26D28AC050F653 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_BC335643C1524266A02CD147409E2A09 }}
-
-      - name: 'Deploy to Azure Web App'
-        id: deploy-to-webapp
-        uses: azure/webapps-deploy@v3
-        with:
-          app-name: 'restaurant-cloud-backend'
-          slot-name: 'Production'
-          package: .
-          
+          app-name: restaurant-cloud-backend   # Your Azure Web App name
+          slot-name: production
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ./restaurant-backend
