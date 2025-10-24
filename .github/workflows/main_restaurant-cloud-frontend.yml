@@ -1,7 +1,4 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
-name: Build and deploy Node.js app to Azure Web App - restaurant-cloud-frontend
+name: Build and deploy React app to Azure Web App - restaurant-cloud-frontend
 
 on:
   push:
@@ -11,55 +8,61 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
-    permissions:
-      contents: read #This is required for actions/checkout
+    runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout repository
       - uses: actions/checkout@v4
 
-      - name: Set up Node.js version
+      # 2️⃣ Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
-      
-      - name: Upload artifact for deployment job
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
+        working-directory: restaurant-frontend
+        run: npm install
+
+      # 4️⃣ Build React frontend
+      - name: Build frontend
+        working-directory: restaurant-frontend
+        run: npm run build
+
+      # 5️⃣ Zip the build folder
+      - name: Zip build folder
+        working-directory: restaurant-frontend
+        run: zip -r build.zip build
+
+      # 6️⃣ Upload zip artifact
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: node-app
-          path: .
+          name: react-build
+          path: restaurant-frontend/build.zip
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
 
     steps:
-      - name: Download artifact from build job
+      # 1️⃣ Download build artifact
+      - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: node-app
-      
-      - name: Login to Azure
+          name: react-build
+          path: build
+
+      # 2️⃣ Login to Azure using Service Principal
+      - name: Azure Login
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_239442D96990450FB5658CD1A95833E8 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_60AC840814E3478B84CF3C4B3422B3B3 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6F584351D74C4D6AB2476835847319C9 }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: 'Deploy to Azure Web App'
+      # 3️⃣ Deploy zip to Azure Web App (Windows)
+      - name: Deploy React build zip to Azure Web App
         uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
         with:
           app-name: 'restaurant-cloud-frontend'
-          slot-name: 'Production'
-          package: .
-          
+          package: build/build.zip
