@@ -30,10 +30,13 @@ jobs:
         working-directory: restaurant-frontend
         run: npm run build
 
-      # 5️⃣ Zip the build folder
-      - name: Zip build folder
-        working-directory: restaurant-frontend
-        run: zip -r build.zip build
+      # 5️⃣ Zip the *contents* of the build folder (important)
+      - name: Zip build folder contents
+        working-directory: restaurant-frontend/build
+        run: |
+          # create ../build.zip containing the files inside restaurant-frontend/build at the zip root
+          zip -r ../build.zip .
+        shell: bash
 
       # 6️⃣ Upload zip artifact
       - name: Upload build artifact
@@ -54,7 +57,7 @@ jobs:
           name: react-build
           path: build
 
-      # 2️⃣ Login to Azure using Service Principal
+      # 2️⃣ Login to Azure using Service Principal (single secret AZURE_CREDENTIALS)
       - name: Azure Login
         uses: azure/login@v2
         with:
