@@ -116,7 +116,9 @@ app.get("/orders", async (req, res) => {
 });
 
 // ✅ Admin routes
-app.use("/api/admin", adminRoutes);
+const adminAuth = require("./routes/adminAuth");
+app.use("/api/admin", adminAuth);
+
 
 // ✅ Serve static images
 app.use("/images", express.static(path.join(__dirname, "screenshots")));
