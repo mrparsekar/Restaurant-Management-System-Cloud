@@ -19,10 +19,12 @@ jobs:
         with:
           node-version: '22'
 
-      # 3. Install dependencies for backend
+      # 3. Install backend dependencies (ensure bcrypt installed)
       - name: Install backend dependencies
         working-directory: restaurant-backend
-        run: npm install
+        run: |
+          npm install
+          npm install bcrypt
 
       # 4. Optional: Run backend tests
       - name: Run backend tests
