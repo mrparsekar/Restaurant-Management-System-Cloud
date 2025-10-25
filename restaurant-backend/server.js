@@ -11,38 +11,42 @@ app.use(express.json());
 // ✅ Test route
 app.get("/test", (req, res) => res.send("Backend is running!"));
 
-// ✅ Customer menu route
+// ✅ Fetch menu items
 app.get("/menu", async (req, res) => {
   try {
     const [results] = await db.query("SELECT * FROM menu WHERE in_stock = 1");
     res.json(results);
   } catch (err) {
-    console.error("❌ DB error (menu):", err);
+    console.error("❌ Database error (menu):", err);
     res.status(500).json({ error: "Database error" });
   }
 });
 
-// ✅ Order placement route
+// ✅ Place an order
 app.post("/orders", async (req, res) => {
   const { customerName, tableNumber, items, totalPrice } = req.body;
-  if (!customerName || !tableNumber || !items?.length)
+
+  if (!customerName || !tableNumber || !items?.length) {
     return res.status(400).json({ error: "Invalid order data." });
+  }
 
   try {
     const [customerResult] = await db.query(
       "INSERT INTO Customers (name, table_no) VALUES (?, ?)",
       [customerName, tableNumber]
     );
+
     const customerId = customerResult.insertId;
 
     const [orderResult] = await db.query(
       "INSERT INTO Orders (customer_id, order_status, order_time) VALUES (?, 'Pending', NOW())",
       [customerId]
     );
+
     const orderId = orderResult.insertId;
 
-    const orderItems = items.map((i) => [orderId, i.item_id, i.quantity]);
-    await db.query("INSERT INTO Order_Items (order_id, item_id, quantity) VALUES ?", [orderItems]);
+    const orderItemsValues = items.map(i => [orderId, i.item_id, i.quantity]);
+    await db.query("INSERT INTO Order_Items (order_id, item_id, quantity) VALUES ?", [orderItemsValues]);
 
     await db.query(
       "INSERT INTO Payments (order_id, total_amount, payment_status, payment_time) VALUES (?, ?, 'Pending', NOW())",
@@ -51,7 +55,7 @@ app.post("/orders", async (req, res) => {
 
     res.json({ message: "Order placed successfully!" });
   } catch (err) {
-    console.error("❌ DB error (orders):", err);
+    console.error("❌ Database error (orders):", err);
     res.status(500).json({ error: "Database error" });
   }
 });
@@ -75,24 +79,23 @@ app.get("/orders", async (req, res) => {
     );
     res.json(results);
   } catch (err) {
-    console.error("❌ DB error (fetch orders):", err);
+    console.error("❌ Database error (fetch orders):", err);
     res.status(500).json({ error: "Database error" });
   }
 });
+
+// ✅ Safely mount admin routes
+try {
+  const adminRoutes = require("./routes/admin");
+  app.use("/api/admin", adminRoutes);
+  console.log("✅ Admin routes loaded");
+} catch (err) {
+  console.error("⚠️ Failed to load admin routes:", err.message);
+}
 
 // ✅ Serve images
 app.use("/images", express.static(path.join(__dirname, "screenshots")));
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
-
-try {
-  const adminRoutes = require("./routes/admin");
-  app.use("/api/admin", adminRoutes);
-  console.log("✅ Admin routes enabled");
-} catch (err) {
-  console.error("⚠️ Admin routes failed to load:", err.message);
-}
-
-
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
