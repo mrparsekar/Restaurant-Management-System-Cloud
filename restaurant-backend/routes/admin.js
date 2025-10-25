@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const router = express.Router();
-const db = require("../db"); // ✅ Correct DB import
+const db = require("../db");
 
 // ✅ Admin login route
 router.post("/login", async (req, res) => {
@@ -11,14 +11,17 @@ router.post("/login", async (req, res) => {
     return res.status(400).json({ error: "Username and password required" });
 
   try {
-    const [rows] = await db.query("SELECT * FROM admin_users WHERE username = ?", [username]);
+    const [rows] = await db.query(
+      "SELECT * FROM admin_users WHERE username = ?",
+      [username]
+    );
 
     if (rows.length === 0)
       return res.status(401).json({ error: "Invalid username or password" });
 
     const admin = rows[0];
-    const match = await bcrypt.compare(password, admin.password_hash);
 
+    const match = await bcrypt.compare(password, admin.password_hash);
     if (!match)
       return res.status(401).json({ error: "Invalid username or password" });
 
@@ -55,7 +58,8 @@ router.post("/orders/:orderId/pay", async (req, res) => {
     const order = rows[0];
 
     await db.query(
-      `INSERT INTO Order_History (order_id, customer_name, table_no, items, order_status, order_time, total_amount)
+      `INSERT INTO Order_History 
+        (order_id, customer_name, table_no, items, order_status, order_time, total_amount)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         order.order_id,
