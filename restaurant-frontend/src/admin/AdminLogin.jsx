@@ -9,26 +9,25 @@ function AdminLogin({ onLoginSuccess }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
     try {
-// AdminLogin.jsx
-const res = await axios.post(
-  "https://restaurant-cloud-backend.azurewebsites.net/api/admin/login",
-  { username, password }
-);
+      // Use Azure backend URL or environment variable
+      const backendURL = process.env.REACT_APP_BACKEND_URL || "https://restaurant-cloud-backend.azurewebsites.net";
 
+      const res = await axios.post(`${backendURL}/api/admin/login`, { username, password });
 
       if (res.data.message === "Login successful") {
         localStorage.setItem("isAdminLoggedIn", "true");
         onLoginSuccess();
       } else {
-        setError("Unexpected response from server.");
+        setError("Unexpected server response.");
       }
     } catch (err) {
       if (err.response?.data?.error) {
         setError(err.response.data.error);
       } else {
-        setError("Login failed. Please try again.");
+        setError("Login failed. Check backend connection.");
       }
     }
   };
@@ -42,33 +41,32 @@ const res = await axios.post(
         {error && <div className="error-box">{error}</div>}
 
         <form onSubmit={handleLogin} className="login-form">
-  <div className="input-group" data-icon="👤">
-    <label>Username</label>
-    <input
-      type="text"
-      value={username}
-      onChange={(e) => setUsername(e.target.value)}
-      placeholder="Enter your username"
-      required
-    />
-  </div>
+          <div className="input-group" data-icon="👤">
+            <label>Username</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
+              required
+            />
+          </div>
 
-  <div className="input-group" data-icon="🔒">
-    <label>Password</label>
-    <input
-      type="password"
-      value={password}
-      onChange={(e) => setPassword(e.target.value)}
-      placeholder="Enter your password"
-      required
-    />
-  </div>
+          <div className="input-group" data-icon="🔒">
+            <label>Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+            />
+          </div>
 
-  <button type="submit" className="login-btn">
-    Login
-  </button>
-</form>
-
+          <button type="submit" className="login-btn">
+            Login
+          </button>
+        </form>
       </div>
     </div>
   );
