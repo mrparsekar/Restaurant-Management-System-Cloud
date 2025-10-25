@@ -51,7 +51,7 @@ const AdminDashboard = () => {
   ];
 
   useEffect(() => {
-    fetch("http://localhost:5000/dashboard/stats")
+    fetch(`${process.env.REACT_APP_BACKEND_URL}/dashboard/stats`)
       .then((res) => res.json())
       .then((data) => setStats(data))
       .catch((err) =>
