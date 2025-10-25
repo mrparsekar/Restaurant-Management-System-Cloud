@@ -1,34 +1,16 @@
 require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
-const mysql = require("mysql2/promise");
 const path = require("path");
+const db = require("./db"); // Use centralized DB pool
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ MySQL connection pool
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: 3306,
-  ssl: { rejectUnauthorized: true },
-  connectionLimit: 10,
-});
-
-// Check DB connection
-db.getConnection()
-  .then(() => console.log("✅ Connected to MySQL Database"))
-  .catch(err => {
-    console.error("❌ Database connection failed:", err);
-    process.exit(1);
-  });
-
 // ✅ Test route
-app.get("/", (req, res) => res.send("Backend is running!"));
+app.get("/test", (req, res) => res.send("Backend is running!"));
 
 // ✅ Fetch menu items
 app.get("/menu", async (req, res) => {
@@ -44,6 +26,7 @@ app.get("/menu", async (req, res) => {
 // ✅ Place an order
 app.post("/orders", async (req, res) => {
   const { customerName, tableNumber, items, totalPrice } = req.body;
+
   if (!customerName || !tableNumber || !items || items.length === 0) {
     return res.status(400).json({ error: "Invalid order data." });
   }
@@ -63,7 +46,11 @@ app.post("/orders", async (req, res) => {
 
     const orderItemsValues = items.map(item => [orderId, item.item_id, item.quantity]);
     await db.query("INSERT INTO Order_Items (order_id, item_id, quantity) VALUES ?", [orderItemsValues]);
-    await db.query("INSERT INTO Payments (order_id, total_amount, payment_status, payment_time) VALUES (?, ?, 'Pending', NOW())", [orderId, totalPrice]);
+
+    await db.query(
+      "INSERT INTO Payments (order_id, total_amount, payment_status, payment_time) VALUES (?, ?, 'Pending', NOW())",
+      [orderId, totalPrice]
+    );
 
     res.json({ message: "Order placed successfully!" });
   } catch (err) {
@@ -96,11 +83,8 @@ app.get("/orders", async (req, res) => {
   }
 });
 
-// ✅ Mount merged admin routes
-const adminRoutes = require("./routes/admin");
+// ✅ Mount admin routes
 app.use("/api/admin", adminRoutes);
-
-
 
 // ✅ Serve static images
 app.use("/images", express.static(path.join(__dirname, "screenshots")));
@@ -108,6 +92,3 @@ app.use("/images", express.static(path.join(__dirname, "screenshots")));
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-
-// Export DB pool for routes
-module.exports = db;
