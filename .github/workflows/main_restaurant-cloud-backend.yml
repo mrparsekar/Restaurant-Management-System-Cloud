@@ -2,29 +2,30 @@ name: Node.js CI/CD
 
 on:
   push:
-    branches: [ main ]  # Runs on push to main branch
+    branches: [ main ]  # Trigger workflow on push to main branch
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout your repository
-      - uses: actions/checkout@v4
+      # 1. Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       # 2. Setup Node.js
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22'
 
-      # 3. Install dependencies (backend folder)
-      - name: Install dependencies
+      # 3. Install dependencies for backend
+      - name: Install backend dependencies
         working-directory: restaurant-backend
         run: npm install
 
-      # 4. Optional: Run tests
-      - name: Run tests
+      # 4. Optional: Run backend tests
+      - name: Run backend tests
         working-directory: restaurant-backend
         run: npm test || echo "No tests defined"
 
@@ -40,10 +41,11 @@ jobs:
               "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
             }
 
-      # 6. Deploy to Azure Web App
-      - name: Deploy to Azure Web App
+      # 6. Deploy backend to Azure Web App
+      - name: Deploy Backend to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: restaurant-cloud-backend   # Your Azure Web App name
+          app-name: restaurant-cloud-backend  # Your Azure Web App name
           slot-name: production
           package: ./restaurant-backend
+          working-directory: restaurant-backend
