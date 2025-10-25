@@ -21,7 +21,7 @@ const AdminMenu = () => {
 
   const fetchMenuItems = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/menu");
+      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/menu`);
       setMenuItems(res.data);
     } catch (err) {
       console.error("Failed to fetch menu:", err);
