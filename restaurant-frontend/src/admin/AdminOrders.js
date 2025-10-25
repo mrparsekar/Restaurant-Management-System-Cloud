@@ -14,7 +14,7 @@ const AdminOrders = () => {
 
   const fetchOrders = () => {
     setLoading(true);
-    fetch("http://localhost:5000/api/admin/orders")
+    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/orders`);
       .then((res) => res.json())
       .then((data) => {
         console.log("✅ Fetched orders:", data);
