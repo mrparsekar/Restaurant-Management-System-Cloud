@@ -37,7 +37,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/test", (req, res) => {
-  res.send("Restaurant Backend is running!");
+  res.send("Backend is running!");
 });
 
 // ✅ Fetch menu items — FIXED VERSION (with in_stock filter)
