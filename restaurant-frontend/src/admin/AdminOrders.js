@@ -1,4 +1,3 @@
-// src/admin/AdminOrders.js
 import React, { useEffect, useState } from "react";
 import "./AdminOrders.css";
 
@@ -13,29 +12,27 @@ const AdminOrders = () => {
   }, []);
 
   const fetchOrders = async () => {
-  setLoading(true);
-  setError(null);
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/orders`);
+      const data = await res.json();
 
-  try {
-    const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/orders`);
-    const data = await res.json();
-
-    if (res.ok && Array.isArray(data)) {
-      console.log("✅ Fetched orders:", data);
-      setOrders(data);
-    } else {
+      if (res.ok && Array.isArray(data)) {
+        console.log("✅ Fetched orders:", data);
+        setOrders(data);
+      } else {
+        setError("Failed to fetch orders.");
+        setOrders([]);
+      }
+    } catch (err) {
+      console.error("❌ Error fetching orders:", err);
       setError("Failed to fetch orders.");
       setOrders([]);
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("❌ Error fetching orders:", err);
-    setError("Failed to fetch orders.");
-    setOrders([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const getNextStatus = (currentStatus) => {
     const statusFlow = ["Pending", "Approved", "Preparing", "Ready", "Served"];
@@ -49,7 +46,7 @@ const AdminOrders = () => {
     setProcessingOrderId(orderId);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/admin/orders/${orderId}/status`,
+        `${process.env.REACT_APP_BACKEND_URL}/api/admin/orders/${orderId}/status`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -75,10 +72,8 @@ const AdminOrders = () => {
     setProcessingOrderId(orderId);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/admin/orders/${orderId}/pay`,
-        {
-          method: "POST",
-        }
+        `${process.env.REACT_APP_BACKEND_URL}/api/admin/orders/${orderId}/pay`,
+        { method: "POST" }
       );
 
       const data = await res.json();
