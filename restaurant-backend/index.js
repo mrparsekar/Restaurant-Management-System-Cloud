@@ -6,6 +6,11 @@ const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
+
+app.get("/test", (req, res) => {
+  res.send("Backend is running!");
+});
+
 app.use(cors());
 app.use(express.json());
 app.use("/api/admin", adminRoutes);
@@ -36,9 +41,6 @@ app.get("/", (req, res) => {
   res.send("Restaurant Backend is running!");
 });
 
-app.get("/test", (req, res) => {
-  res.send("Backend is running!");
-});
 
 // ✅ Fetch menu items — FIXED VERSION (with in_stock filter)
 app.get("/menu", (req, res) => {
