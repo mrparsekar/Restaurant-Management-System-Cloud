@@ -25,7 +25,7 @@ const Orders = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:5000/orders?name=${customerName}&table_no=${tableNumber}`);
+      const response = await fetch(`https://restaurant-cloud-backend.azurewebsites.net/orders?name=${customerName}&table_no=${tableNumber}`);
       const data = await response.json();
 
       if (response.ok && Array.isArray(data)) {
