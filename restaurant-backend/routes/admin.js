@@ -1,16 +1,48 @@
-// routes/adminRoutes.js
+// routes/admin.js
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcrypt");
 
-// Import the shared DB pool from server.js
-const db = require("../server"); // server.js must export the MySQL pool
+// Import DB pool from server.js
+const db = require("../server");
+
+// ✅ Admin login
+router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password are required" });
+  }
+
+  try {
+    const [results] = await db.query(
+      "SELECT * FROM admin_users WHERE username = ?",
+      [username]
+    );
+
+    if (results.length === 0) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    const admin = results[0];
+    const isMatch = await bcrypt.compare(password, admin.password_hash);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    res.status(200).json({ message: "Login successful" });
+  } catch (err) {
+    console.error("❌ Login error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
 // ✅ Mark order as Paid
 router.post("/orders/:orderId/pay", async (req, res) => {
   const orderId = req.params.orderId;
 
   try {
-    // Fetch order details
     const [results] = await db
       .promise()
       .query(
@@ -38,7 +70,6 @@ router.post("/orders/:orderId/pay", async (req, res) => {
 
     const order = results[0];
 
-    // Insert into Order_History
     await db
       .promise()
       .query(
@@ -56,7 +87,6 @@ router.post("/orders/:orderId/pay", async (req, res) => {
         ]
       );
 
-    // Update order status
     await db
       .promise()
       .query("UPDATE Orders SET order_status = 'Paid' WHERE order_id = ?", [orderId]);
