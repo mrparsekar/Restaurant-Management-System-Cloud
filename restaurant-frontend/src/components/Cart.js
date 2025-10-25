@@ -38,7 +38,7 @@ const Cart = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:5000/orders", {
+      const response = await fetch("https://restaurant-cloud-backend.azurewebsites.net/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
