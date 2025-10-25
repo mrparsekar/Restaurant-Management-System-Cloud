@@ -11,60 +11,57 @@ const Orders = () => {
     if (customerName && tableNumber) {
       fetchOrders();
     }
-  }, []);
+  }, []); // run only once on mount
 
- const fetchOrders = async () => {
-  if (!customerName || !tableNumber) {
-    alert("Please enter your name and table number.");
-    return;
-  }
-
-  localStorage.setItem("customerName", customerName);
-  localStorage.setItem("tableNumber", tableNumber);
-
-  setLoading(true);
-
-  try {
-    const response = await fetch(
-      `https://restaurant-cloud-backend.azurewebsites.net/orders?name=${customerName}&table_no=${tableNumber}`
-    );
-
-    const data = await response.json();
-
-    if (response.ok && Array.isArray(data)) {
-      const groupedOrders = data.reduce((acc, order) => {
-        if (!acc[order.order_id]) {
-          acc[order.order_id] = {
-            order_id: order.order_id,
-            order_status: order.order_status,
-            order_time: order.order_time,
-            total_price: 0,
-            items: []
-          };
-        }
-        acc[order.order_id].items.push({
-          item_name: order.item_name,
-          quantity: order.quantity,
-          price: order.price
-        });
-        acc[order.order_id].total_price += order.quantity * order.price;
-        return acc;
-      }, {});
-
-      setOrders(Object.values(groupedOrders));
-    } else {
-      setOrders([]);
-      alert("Failed to fetch orders: Invalid data format.");
+  const fetchOrders = async () => {
+    if (!customerName || !tableNumber) {
+      alert("Please enter your name and table number.");
+      return;
     }
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    alert("Error fetching orders. Try again later.");
-    setOrders([]);
-  }
 
-  setLoading(false);
-};
+    localStorage.setItem("customerName", customerName);
+    localStorage.setItem("tableNumber", tableNumber);
 
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://restaurant-cloud-backend.azurewebsites.net/orders?name=${customerName}&table_no=${tableNumber}`
+      );
+      const data = await response.json();
+
+      if (response.ok && Array.isArray(data)) {
+        const groupedOrders = data.reduce((acc, order) => {
+          if (!acc[order.order_id]) {
+            acc[order.order_id] = {
+              order_id: order.order_id,
+              order_status: order.order_status,
+              order_time: order.order_time,
+              total_price: 0,
+              items: []
+            };
+          }
+          acc[order.order_id].items.push({
+            item_name: order.item_name,
+            quantity: order.quantity,
+            price: order.price
+          });
+          acc[order.order_id].total_price += order.quantity * order.price;
+          return acc;
+        }, {});
+
+        setOrders(Object.values(groupedOrders));
+      } else {
+        setOrders([]);
+        alert("Failed to fetch orders: Invalid data format.");
+      }
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      alert("Error fetching orders. Try again later.");
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="orders-container">
