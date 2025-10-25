@@ -11,10 +11,10 @@ function AdminLogin({ onLoginSuccess }) {
     e.preventDefault();
 
     try {
-      const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/admin/login`, {
-        username,
-        password,
-      });
+     const res = await axios.post(
+  `${process.env.REACT_APP_BACKEND_URL}/api/admin/login`,
+  { username, password }
+);
 
       if (res.data.message === "Login successful") {
         localStorage.setItem("isAdminLoggedIn", "true");
