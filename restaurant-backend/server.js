@@ -97,8 +97,7 @@ app.get("/orders", async (req, res) => {
 });
 
 // ✅ Mount merged admin routes
-const adminRoutes = require("./routes/admin"); // file must exist
-app.use("/api/admin", adminRoutes);
+
 
 
 // ✅ Serve static images
