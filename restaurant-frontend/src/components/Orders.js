@@ -25,7 +25,7 @@ const Orders = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/orders?name=${customerName}&table_no=${tableNumber}`)
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/orders?name=${customerName}&table_no=${tableNumber}`)
       const data = await response.json();
 
       if (response.ok && Array.isArray(data)) {
