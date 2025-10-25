@@ -28,7 +28,7 @@ db.getConnection()
   });
 
 // ✅ Test route
-app.get("/test", (req, res) => res.send("Backend is running!"));
+app.get("/", (req, res) => res.send("Backend is running!"));
 
 // ✅ Fetch menu items
 app.get("/menu", async (req, res) => {
@@ -97,6 +97,8 @@ app.get("/orders", async (req, res) => {
 });
 
 // ✅ Mount merged admin routes
+const adminRoutes = require("./routes/admin");
+app.use("/api/admin", adminRoutes);
 
 
 
