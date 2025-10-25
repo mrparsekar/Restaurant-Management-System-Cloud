@@ -84,7 +84,7 @@ app.get("/orders", async (req, res) => {
 });
 
 // ✅ Mount admin routes
-app.use("/api/admin", adminRoutes);
+//app.use("/api/admin", adminRoutes);
 
 // ✅ Serve static images
 app.use("/images", express.static(path.join(__dirname, "screenshots")));
