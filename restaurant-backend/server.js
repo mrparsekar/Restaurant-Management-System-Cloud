@@ -1,16 +1,20 @@
-require('dotenv').config();
+// server.js
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const db = require("./db"); // Use centralized DB pool
-const adminRoutes = require("./routes/admin");
+const db = require("./db"); // uses the pool from db.js
 
 const app = express();
+
+// ✅ Middleware
 app.use(cors());
 app.use(express.json());
 
 // ✅ Test route
-app.get("/test", (req, res) => res.send("Backend is running!"));
+app.get("/test", (req, res) => {
+  res.send("✅ Backend is running fine on Azure!");
+});
 
 // ✅ Fetch menu items
 app.get("/menu", async (req, res) => {
@@ -19,7 +23,7 @@ app.get("/menu", async (req, res) => {
     res.json(results);
   } catch (err) {
     console.error("❌ Database error while fetching menu:", err);
-    res.status(500).json({ error: "Database error" });
+    res.status(500).json({ error: "Database error while fetching menu" });
   }
 });
 
@@ -32,37 +36,53 @@ app.post("/orders", async (req, res) => {
   }
 
   try {
+    // Insert customer
     const [customerResult] = await db.query(
       "INSERT INTO Customers (name, table_no) VALUES (?, ?)",
       [customerName, tableNumber]
     );
     const customerId = customerResult.insertId;
 
+    // Insert order
     const [orderResult] = await db.query(
       "INSERT INTO Orders (customer_id, order_status, order_time) VALUES (?, 'Pending', NOW())",
       [customerId]
     );
     const orderId = orderResult.insertId;
 
-    const orderItemsValues = items.map(item => [orderId, item.item_id, item.quantity]);
-    await db.query("INSERT INTO Order_Items (order_id, item_id, quantity) VALUES ?", [orderItemsValues]);
+    // Insert items
+    const orderItemsValues = items.map((item) => [
+      orderId,
+      item.item_id,
+      item.quantity,
+    ]);
+    await db.query(
+      "INSERT INTO Order_Items (order_id, item_id, quantity) VALUES ?",
+      [orderItemsValues]
+    );
 
+    // Insert payment
     await db.query(
       "INSERT INTO Payments (order_id, total_amount, payment_status, payment_time) VALUES (?, ?, 'Pending', NOW())",
       [orderId, totalPrice]
     );
 
-    res.json({ message: "Order placed successfully!" });
+    res.json({ message: "✅ Order placed successfully!" });
   } catch (err) {
-    console.error("❌ Database error while placing order:", err);
-    res.status(500).json({ error: "Database error" });
+    console.error("❌ Error while placing order:", err);
+    res.status(500).json({ error: "Database error while placing order" });
   }
 });
 
 // ✅ Fetch customer orders
 app.get("/orders", async (req, res) => {
   const { name, table_no } = req.query;
-  if (!name || !table_no) return res.status(400).json({ error: "Customer name and table number are required" });
+
+  if (!name || !table_no) {
+    return res
+      .status(400)
+      .json({ error: "Customer name and table number are required" });
+  }
 
   try {
     const [results] = await db.query(
@@ -78,17 +98,25 @@ app.get("/orders", async (req, res) => {
     );
     res.json(results);
   } catch (err) {
-    console.error("❌ Database error while fetching orders:", err);
-    res.status(500).json({ error: "Database error" });
+    console.error("❌ Error fetching customer orders:", err);
+    res.status(500).json({ error: "Database error while fetching orders" });
   }
 });
 
-// ✅ Mount admin routes
-//app.use("/api/admin", adminRoutes);
+// ✅ Mount admin routes (make sure routes/admin.js exists)
+try {
+  const adminRoutes = require("./routes/admin");
+  app.use("/api/admin", adminRoutes);
+  console.log("✅ Admin routes loaded successfully");
+} catch (err) {
+  console.error("⚠️ Failed to load admin routes:", err.message);
+}
 
 // ✅ Serve static images
 app.use("/images", express.static(path.join(__dirname, "screenshots")));
 
 // ✅ Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () =>
+  console.log(`🚀 Server running successfully on port ${PORT}`)
+);
