@@ -13,9 +13,10 @@ function AdminLogin({ onLoginSuccess }) {
     try {
 // AdminLogin.jsx
 const res = await axios.post(
-  `${process.env.REACT_APP_BACKEND_URL}/api/admin/login`,
+  "https://restaurant-cloud-backend.azurewebsites.net/api/admin/login",
   { username, password }
 );
+
 
       if (res.data.message === "Login successful") {
         localStorage.setItem("isAdminLoggedIn", "true");
