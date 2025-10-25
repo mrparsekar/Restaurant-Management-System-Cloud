@@ -12,10 +12,15 @@ function AdminLogin({ onLoginSuccess }) {
     setError("");
 
     try {
-      // Use Azure backend URL or environment variable
-      const backendURL = process.env.REACT_APP_BACKEND_URL || "https://restaurant-cloud-backend.azurewebsites.net";
+      // Use environment variable or fallback to deployed backend
+      const backendURL =
+        process.env.REACT_APP_BACKEND_URL ||
+        "https://restaurant-cloud-backend.azurewebsites.net";
 
-      const res = await axios.post(`${backendURL}/api/admin/login`, { username, password });
+      const res = await axios.post(`${backendURL}/api/admin/login`, {
+        username,
+        password,
+      });
 
       if (res.data.message === "Login successful") {
         localStorage.setItem("isAdminLoggedIn", "true");
@@ -24,8 +29,11 @@ function AdminLogin({ onLoginSuccess }) {
         setError("Unexpected server response.");
       }
     } catch (err) {
+      // Handle backend errors gracefully
       if (err.response?.data?.error) {
         setError(err.response.data.error);
+      } else if (err.message.includes("Network Error")) {
+        setError("Network error. Backend might be offline.");
       } else {
         setError("Login failed. Check backend connection.");
       }
