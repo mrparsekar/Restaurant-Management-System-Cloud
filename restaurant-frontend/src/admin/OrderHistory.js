@@ -9,7 +9,7 @@ const OrderHistory = () => {
   useEffect(() => {
     const fetchOrderHistory = async () => {
       try {
-        const response = await fetch("http://localhost:5000/order-history");
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/order-history`);
         const data = await response.json();
 
         if (Array.isArray(data)) {
