@@ -38,7 +38,7 @@ const Cart = () => {
     };
 
     try {
-      const response = await fetch("https://restaurant-cloud-backend.azurewebsites.net/orders", {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/orders`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
