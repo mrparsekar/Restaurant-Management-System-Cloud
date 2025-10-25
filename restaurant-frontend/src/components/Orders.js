@@ -13,54 +13,58 @@ const Orders = () => {
     }
   }, []);
 
-  const fetchOrders = async () => {
-    if (!customerName || !tableNumber) {
-      alert("Please enter your name and table number.");
-      return;
-    }
+ const fetchOrders = async () => {
+  if (!customerName || !tableNumber) {
+    alert("Please enter your name and table number.");
+    return;
+  }
 
-    localStorage.setItem("customerName", customerName);
-    localStorage.setItem("tableNumber", tableNumber);
+  localStorage.setItem("customerName", customerName);
+  localStorage.setItem("tableNumber", tableNumber);
 
-    setLoading(true);
+  setLoading(true);
 
-    try {
-      fetch("https://restaurant-cloud-backend.azurewebsites.net/orders",
-      const data = await response.json();
+  try {
+    const response = await fetch(
+      `https://restaurant-cloud-backend.azurewebsites.net/orders?name=${customerName}&table_no=${tableNumber}`
+    );
 
-      if (response.ok && Array.isArray(data)) {
-        const groupedOrders = data.reduce((acc, order) => {
-          if (!acc[order.order_id]) {
-            acc[order.order_id] = {
-              order_id: order.order_id,
-              order_status: order.order_status,
-              order_time: order.order_time,
-              total_price: 0,
-              items: []
-            };
-          }
-          acc[order.order_id].items.push({
-            item_name: order.item_name,
-            quantity: order.quantity,
-            price: order.price
-          });
-          acc[order.order_id].total_price += order.quantity * order.price;
-          return acc;
-        }, {});
+    const data = await response.json();
 
-        setOrders(Object.values(groupedOrders));
-      } else {
-        setOrders([]);
-        alert("Failed to fetch orders: Invalid data format.");
-      }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      alert("Error fetching orders. Try again later.");
+    if (response.ok && Array.isArray(data)) {
+      const groupedOrders = data.reduce((acc, order) => {
+        if (!acc[order.order_id]) {
+          acc[order.order_id] = {
+            order_id: order.order_id,
+            order_status: order.order_status,
+            order_time: order.order_time,
+            total_price: 0,
+            items: []
+          };
+        }
+        acc[order.order_id].items.push({
+          item_name: order.item_name,
+          quantity: order.quantity,
+          price: order.price
+        });
+        acc[order.order_id].total_price += order.quantity * order.price;
+        return acc;
+      }, {});
+
+      setOrders(Object.values(groupedOrders));
+    } else {
       setOrders([]);
+      alert("Failed to fetch orders: Invalid data format.");
     }
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    alert("Error fetching orders. Try again later.");
+    setOrders([]);
+  }
 
-    setLoading(false);
-  };
+  setLoading(false);
+};
+
 
   return (
     <div className="orders-container">
