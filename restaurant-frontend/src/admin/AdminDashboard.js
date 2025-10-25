@@ -32,6 +32,8 @@ const AdminDashboard = () => {
     orderHistoryCount: 0,
     totalRevenue: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Dummy chart data (replace with dynamic later)
   const revenueData = [
@@ -51,12 +53,39 @@ const AdminDashboard = () => {
   ];
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_BACKEND_URL}/dashboard/stats`)
-      .then((res) => res.json())
-      .then((data) => setStats(data))
-      .catch((err) =>
-        console.error("Error fetching dashboard stats:", err)
-      );
+    const fetchDashboardStats = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const backendURL =
+          process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+
+        const res = await fetch(`${backendURL}/dashboard/stats`);
+
+        if (!res.ok) {
+          throw new Error(`Server returned ${res.status}`);
+        }
+
+        // Ensure response is JSON
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Invalid response format (not JSON)");
+        }
+
+        const data = await res.json();
+        setStats(data);
+      } catch (err) {
+        console.error("Error fetching dashboard stats:", err);
+        setError(
+          "Failed to fetch dashboard stats. Please check backend deployment."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardStats();
   }, []);
 
   return (
@@ -65,87 +94,94 @@ const AdminDashboard = () => {
       <div className="admin-dashboard">
         <h1 className="dashboard-title">Dashboard Overview</h1>
 
-        <div className="dashboard-cards">
-          <div className="card">
-            <FaClipboardList className="card-icon" />
-            <div className="card-info">
-              <p>Total Orders</p>
-              <h3>{stats.totalOrders}</h3>
-            </div>
-          </div>
-          <div className="card">
-            <FaChartLine className="card-icon" />
-            <div className="card-info">
-              <p>Revenue</p>
-              <h3>₹{stats.totalRevenue}</h3>
-            </div>
-          </div>
-          <div className="card">
-            <FaUtensils className="card-icon" />
-            <div className="card-info">
-              <p>Menu Items</p>
-              <h3>{stats.menuItemsCount}</h3>
-            </div>
-          </div>
-          <div className="card">
-            <FaCheckCircle className="card-icon" />
-            <div className="card-info">
-              <p>Completed Orders</p>
-              <h3>{stats.completedOrders}</h3>
-            </div>
-          </div>
-          <div className="card">
-            <FaClock className="card-icon" />
-            <div className="card-info">
-              <p>Pending Orders</p>
-              <h3>{stats.pendingOrders}</h3>
-            </div>
-          </div>
-          <div className="card">
-            <FaHistory className="card-icon" />
-            <div className="card-info">
-              <p>Order History</p>
-              <h3>{stats.orderHistoryCount}</h3>
-            </div>
-          </div>
-        </div>
+        {loading && <p>Loading stats...</p>}
+        {error && <p className="error-text">{error}</p>}
 
-        {/* Charts Section */}
-        <div className="charts-section">
-          {/* Revenue Line Chart */}
-          <div className="chart-card">
-            <h3 className="chart-title">📈 Revenue Trend</h3>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#4CAF50"
-                  strokeWidth={3}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+        {!loading && !error && (
+          <>
+            <div className="dashboard-cards">
+              <div className="card">
+                <FaClipboardList className="card-icon" />
+                <div className="card-info">
+                  <p>Total Orders</p>
+                  <h3>{stats.totalOrders}</h3>
+                </div>
+              </div>
+              <div className="card">
+                <FaChartLine className="card-icon" />
+                <div className="card-info">
+                  <p>Revenue</p>
+                  <h3>₹{stats.totalRevenue}</h3>
+                </div>
+              </div>
+              <div className="card">
+                <FaUtensils className="card-icon" />
+                <div className="card-info">
+                  <p>Menu Items</p>
+                  <h3>{stats.menuItemsCount}</h3>
+                </div>
+              </div>
+              <div className="card">
+                <FaCheckCircle className="card-icon" />
+                <div className="card-info">
+                  <p>Completed Orders</p>
+                  <h3>{stats.completedOrders}</h3>
+                </div>
+              </div>
+              <div className="card">
+                <FaClock className="card-icon" />
+                <div className="card-info">
+                  <p>Pending Orders</p>
+                  <h3>{stats.pendingOrders}</h3>
+                </div>
+              </div>
+              <div className="card">
+                <FaHistory className="card-icon" />
+                <div className="card-info">
+                  <p>Order History</p>
+                  <h3>{stats.orderHistoryCount}</h3>
+                </div>
+              </div>
+            </div>
 
-          {/* Order Status Bar Chart */}
-          <div className="chart-card">
-            <h3 className="chart-title">📊 Orders by Status</h3>
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statusData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="status" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="#2196F3" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+            {/* Charts Section */}
+            <div className="charts-section">
+              {/* Revenue Line Chart */}
+              <div className="chart-card">
+                <h3 className="chart-title">📈 Revenue Trend</h3>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip />
+                    <Line
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#4CAF50"
+                      strokeWidth={3}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Order Status Bar Chart */}
+              <div className="chart-card">
+                <h3 className="chart-title">📊 Orders by Status</h3>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={statusData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="status" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="count" fill="#2196F3" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
