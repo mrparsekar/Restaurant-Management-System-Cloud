@@ -6,11 +6,6 @@ const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
-
-app.get("/test", (req, res) => {
-  res.send("Backend is running!");
-});
-
 app.use(cors());
 app.use(express.json());
 app.use("/api/admin", adminRoutes);
