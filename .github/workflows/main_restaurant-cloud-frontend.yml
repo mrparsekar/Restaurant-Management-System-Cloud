@@ -20,6 +20,11 @@ jobs:
         with:
           node-version: '22.x'
 
+      # 2.1️⃣ Set environment variable for backend URL
+      - name: Set environment variables
+        run: |
+          echo "REACT_APP_BACKEND_URL=https://restaurant-cloud-backend.azurewebsites.net" >> $GITHUB_ENV
+
       # 3️⃣ Install dependencies
       - name: Install dependencies
         working-directory: restaurant-frontend
@@ -38,7 +43,7 @@ jobs:
           zip -r ../build.zip .
         shell: bash
 
-      # 6️⃣ Upload zip artifact
+      # 6️⃣ Upload build artifact
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
