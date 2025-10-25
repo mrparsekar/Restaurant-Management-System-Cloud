@@ -12,23 +12,30 @@ const AdminOrders = () => {
     fetchOrders();
   }, []);
 
-  const fetchOrders = () => {
-    setLoading(true);
+  const fetchOrders = async () => {
+  setLoading(true);
+  setError(null);
+
+  try {
     const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/orders`);
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("✅ Fetched orders:", data);
-        setOrders(data);
-        setError(null);
-      })
-      .catch((err) => {
-        console.error("❌ Error fetching orders:", err);
-        setError("Failed to fetch orders.");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  };
+    const data = await res.json();
+
+    if (res.ok && Array.isArray(data)) {
+      console.log("✅ Fetched orders:", data);
+      setOrders(data);
+    } else {
+      setError("Failed to fetch orders.");
+      setOrders([]);
+    }
+  } catch (err) {
+    console.error("❌ Error fetching orders:", err);
+    setError("Failed to fetch orders.");
+    setOrders([]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const getNextStatus = (currentStatus) => {
     const statusFlow = ["Pending", "Approved", "Preparing", "Ready", "Served"];
