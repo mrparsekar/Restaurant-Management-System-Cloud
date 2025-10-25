@@ -1,9 +1,8 @@
-require('dotenv').config(); // Load env variables
+require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
 const path = require("path");
-const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 app.use(cors());
@@ -29,14 +28,7 @@ db.getConnection()
   });
 
 // ✅ Test route
-app.get("/test", (req, res) => {
-  res.send("Backend is running!");
-});
-
-// ✅ Root route
-app.get("/", (req, res) => {
-  res.send("Restaurant Backend is running!");
-});
+app.get("/test", (req, res) => res.send("Backend is running!"));
 
 // ✅ Fetch menu items
 app.get("/menu", async (req, res) => {
@@ -52,7 +44,6 @@ app.get("/menu", async (req, res) => {
 // ✅ Place an order
 app.post("/orders", async (req, res) => {
   const { customerName, tableNumber, items, totalPrice } = req.body;
-
   if (!customerName || !tableNumber || !items || items.length === 0) {
     return res.status(400).json({ error: "Invalid order data." });
   }
@@ -71,15 +62,8 @@ app.post("/orders", async (req, res) => {
     const orderId = orderResult.insertId;
 
     const orderItemsValues = items.map(item => [orderId, item.item_id, item.quantity]);
-    await db.query(
-      "INSERT INTO Order_Items (order_id, item_id, quantity) VALUES ?",
-      [orderItemsValues]
-    );
-
-    await db.query(
-      "INSERT INTO Payments (order_id, total_amount, payment_status, payment_time) VALUES (?, ?, 'Pending', NOW())",
-      [orderId, totalPrice]
-    );
+    await db.query("INSERT INTO Order_Items (order_id, item_id, quantity) VALUES ?", [orderItemsValues]);
+    await db.query("INSERT INTO Payments (order_id, total_amount, payment_status, payment_time) VALUES (?, ?, 'Pending', NOW())", [orderId, totalPrice]);
 
     res.json({ message: "Order placed successfully!" });
   } catch (err) {
@@ -91,10 +75,7 @@ app.post("/orders", async (req, res) => {
 // ✅ Fetch customer orders
 app.get("/orders", async (req, res) => {
   const { name, table_no } = req.query;
-
-  if (!name || !table_no) {
-    return res.status(400).json({ error: "Customer name and table number are required" });
-  }
+  if (!name || !table_no) return res.status(400).json({ error: "Customer name and table number are required" });
 
   try {
     const [results] = await db.query(
@@ -115,8 +96,9 @@ app.get("/orders", async (req, res) => {
   }
 });
 
-// ✅ Admin routes
-
+// ✅ Mount merged admin routes
+const adminRoutes = require("./routes/admin");
+app.use("/api/admin", adminRoutes);
 
 // ✅ Serve static images
 app.use("/images", express.static(path.join(__dirname, "screenshots")));
@@ -125,4 +107,5 @@ app.use("/images", express.static(path.join(__dirname, "screenshots")));
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 
+// Export DB pool for routes
 module.exports = db;
