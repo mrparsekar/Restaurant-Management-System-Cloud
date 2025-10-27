@@ -8,7 +8,7 @@ const router = express.Router();
 const upload = multer(); // Handle multipart/form-data uploads
 
 // ✅ Add new menu item (image upload handled)
-router.post("/menu/add", upload.single("image"), async (req, res) => {
+router.post("/api/admin/menu/add", upload.single("image"), async (req, res) => {
   try {
     const { name, category, price, in_stock } = req.body;
     let imageUrl = null;
@@ -50,7 +50,7 @@ router.get("/menu", async (req, res) => {
 });
 
 // ✅ Delete menu item (and image from blob)
-router.delete("/menu/delete/:id", async (req, res) => {
+router.delete("/api/admin/menu/delete/:id", async (req, res) => {
   try {
     const [[item]] = await db.query("SELECT image FROM menu WHERE item_id = ?", [req.params.id]);
 
@@ -68,7 +68,7 @@ router.delete("/menu/delete/:id", async (req, res) => {
 });
 
 // ✅ Toggle stock availability
-router.put("/menu/:id/stock", async (req, res) => {
+router.put("/api/admin/menu/:id/stock", async (req, res) => {
   try {
     const { in_stock } = req.body;
     await db.query("UPDATE menu SET in_stock = ? WHERE item_id = ?", [in_stock, req.params.id]);
