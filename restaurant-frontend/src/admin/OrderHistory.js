@@ -9,7 +9,7 @@ const OrderHistory = () => {
   useEffect(() => {
     const fetchOrderHistory = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/admin/orders`);
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/order-history`);
         const data = await response.json();
 
         if (Array.isArray(data)) {
