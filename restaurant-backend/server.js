@@ -4,10 +4,12 @@ const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const db = require("./db"); // your mysql2/promise pool
-
+import adminMenuRoutes from "./routes/adminMenuRoutes.js";
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use("/api/admin", adminMenuRoutes);
+console.log("✅ adminMenuRoutes mounted");
 
 // Helper: try multiple insert targets so we work with different DB schemas
 async function tryInsertMultiple(insertFns = []) {
