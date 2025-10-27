@@ -1,6 +1,6 @@
 // backend/routes/blobServices.js
-import { BlobServiceClient, generateBlobSASQueryParameters, BlobSASPermissions } from "@azure/storage-blob";
-import { v4 as uuidv4 } from "uuid";
+const { BlobServiceClient, generateBlobSASQueryParameters, BlobSASPermissions } = require("@azure/storage-blob");
+const { v4: uuidv4 } = require("uuid");
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const CONTAINER_NAME = process.env.AZURE_STORAGE_CONTAINER || "menu-images";
@@ -13,7 +13,7 @@ const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_C
 const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
 
 // ✅ Upload file buffer to Blob
-export async function uploadToBlob(file) {
+async function uploadToBlob(file) {
   const blobName = `${Date.now()}-${uuidv4()}-${file.originalname}`;
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
@@ -25,7 +25,7 @@ export async function uploadToBlob(file) {
 }
 
 // ✅ Delete file from Blob
-export async function deleteFromBlob(blobName) {
+async function deleteFromBlob(blobName) {
   try {
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     await blockBlobClient.deleteIfExists();
@@ -36,7 +36,7 @@ export async function deleteFromBlob(blobName) {
 }
 
 // ✅ Generate SAS (for secure temporary access)
-export function generateSasUrl(blobName) {
+function generateSasUrl(blobName) {
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
   const expiresOn = new Date(new Date().valueOf() + 3600 * 1000); // 1 hour expiry
 
@@ -52,3 +52,5 @@ export function generateSasUrl(blobName) {
 
   return `${blockBlobClient.url}?${sas}`;
 }
+
+module.exports = { uploadToBlob, deleteFromBlob, generateSasUrl };
