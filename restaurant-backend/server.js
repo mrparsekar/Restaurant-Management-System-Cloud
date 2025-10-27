@@ -4,7 +4,7 @@ const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const db = require("./db"); // your mysql2/promise pool
-import adminMenuRoutes from "./routes/adminMenuRoutes.js";
+
 const app = express();
 app.use(cors());
 app.use(express.json());
