@@ -457,6 +457,17 @@ app.get("/api/order-history", async (req, res) => {
 
 app.get("/order-history", (req, res) => res.redirect(307, "/api/order-history"));
 
+// after existing middlewares and routes...
+// mount the admin menu routes
+try {
+  const adminMenuRoutes = require("./routes/adminMenuRoutes");
+  app.use("/api/admin", adminMenuRoutes);
+  console.log("✅ adminMenuRoutes mounted");
+} catch (err) {
+  console.error("⚠️ Failed to mount adminMenuRoutes:", err.message);
+}
+
+
 /* ------------------------------
    Static images
    ------------------------------ */
