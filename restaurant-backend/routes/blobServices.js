@@ -1,73 +1,54 @@
 // backend/routes/blobServices.js
-import {
-  BlobServiceClient,
-  StorageSharedKeyCredential,
-  generateBlobSASQueryParameters,
-  BlobSASPermissions,
-} from "@azure/storage-blob";
-import dotenv from "dotenv";
-dotenv.config();
+import { BlobServiceClient, generateBlobSASQueryParameters, BlobSASPermissions } from "@azure/storage-blob";
+import { v4 as uuidv4 } from "uuid";
 
-const connectionString = process.env.AZURE_STORAGE_CONNECTION_STRING;
-const containerName = process.env.AZURE_BLOB_CONTAINER;
+const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
+const CONTAINER_NAME = process.env.AZURE_STORAGE_CONTAINER || "menu-images";
 
-// Create blob service client
-const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-const containerClient = blobServiceClient.getContainerClient(containerName);
+if (!AZURE_STORAGE_CONNECTION_STRING) {
+  throw new Error("❌ Missing Azure connection string in environment variables");
+}
 
-// ✅ Upload image to blob storage
-export const uploadToBlob = async (file) => {
-  try {
-    const blobName = `${Date.now()}-${file.originalname}`;
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
+const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
 
-    await blockBlobClient.uploadData(file.buffer, {
-      blobHTTPHeaders: { blobContentType: file.mimetype },
-    });
+// ✅ Upload file buffer to Blob
+export async function uploadToBlob(file) {
+  const blobName = `${Date.now()}-${uuidv4()}-${file.originalname}`;
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
-    console.log("✅ Uploaded to Blob Storage:", blobName);
-    return `https://${process.env.AZURE_STORAGE_ACCOUNT_NAME}.blob.core.windows.net/${containerName}/${blobName}`;
-  } catch (err) {
-    console.error("❌ Error uploading to Blob Storage:", err);
-    throw err;
-  }
-};
+  await blockBlobClient.uploadData(file.buffer, {
+    blobHTTPHeaders: { blobContentType: file.mimetype },
+  });
 
-// ✅ Delete image from blob storage
-export const deleteFromBlob = async (blobName) => {
+  return blockBlobClient.url; // Return public (or SAS) URL
+}
+
+// ✅ Delete file from Blob
+export async function deleteFromBlob(blobName) {
   try {
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     await blockBlobClient.deleteIfExists();
-    console.log("🗑️ Deleted from Blob Storage:", blobName);
+    console.log(`🗑️ Deleted blob: ${blobName}`);
   } catch (err) {
-    console.error("❌ Error deleting blob:", err);
+    console.error("⚠️ Error deleting blob:", err.message);
   }
-};
+}
 
-// ✅ Generate secure SAS URL for private access
-export const generateSasUrl = (blobName) => {
-  try {
-    const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
-    const accountKey = process.env.AZURE_STORAGE_ACCOUNT_KEY;
-    const container = process.env.AZURE_BLOB_CONTAINER;
+// ✅ Generate SAS (for secure temporary access)
+export function generateSasUrl(blobName) {
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  const expiresOn = new Date(new Date().valueOf() + 3600 * 1000); // 1 hour expiry
 
-    const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
+  const sas = generateBlobSASQueryParameters(
+    {
+      containerName: CONTAINER_NAME,
+      blobName,
+      permissions: BlobSASPermissions.parse("r"),
+      expiresOn,
+    },
+    blobServiceClient.credential
+  ).toString();
 
-    // Generate SAS token valid for 24 hours
-    const sasToken = generateBlobSASQueryParameters(
-      {
-        containerName: container,
-        blobName,
-        permissions: BlobSASPermissions.parse("r"), // Read-only
-        startsOn: new Date(),
-        expiresOn: new Date(new Date().valueOf() + 24 * 60 * 60 * 1000),
-      },
-      sharedKeyCredential
-    ).toString();
-
-    return `https://${accountName}.blob.core.windows.net/${container}/${blobName}?${sasToken}`;
-  } catch (err) {
-    console.error("❌ Error generating SAS URL:", err);
-    return null;
-  }
-};
+  return `${blockBlobClient.url}?${sas}`;
+}
