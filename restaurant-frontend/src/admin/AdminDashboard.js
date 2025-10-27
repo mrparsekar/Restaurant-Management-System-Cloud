@@ -61,7 +61,7 @@ const AdminDashboard = () => {
         const backendURL =
           process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 
-        const res = await fetch(`${backendURL}api/dashboard/stats`);
+        const res = await fetch(`${backendURL}/api/dashboard/stats`);
 
         if (!res.ok) {
           throw new Error(`Server returned ${res.status}`);
