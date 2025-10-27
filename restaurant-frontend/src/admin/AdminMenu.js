@@ -1,3 +1,4 @@
+// src/admin/AdminMenu.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./AdminMenu.css";
@@ -14,7 +15,6 @@ const AdminMenu = () => {
     image: ""
   });
   const [editItem, setEditItem] = useState(null);
-
   const backendURL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 
   useEffect(() => {
@@ -24,50 +24,67 @@ const AdminMenu = () => {
   const fetchMenuItems = async () => {
     try {
       const res = await axios.get(`${backendURL}/api/admin/menu`);
-      setMenuItems(res.data);
+      setMenuItems(res.data || []);
     } catch (err) {
       console.error("Failed to fetch menu:", err);
+      setMenuItems([]);
     }
   };
 
   const handleToggleStock = async (itemId) => {
     try {
+      // Correct endpoint is /api/admin/menu/toggle-stock/:id
       await axios.put(`${backendURL}/api/admin/menu/toggle-stock/${itemId}`);
-      fetchMenuItems();
+      await fetchMenuItems();
     } catch (err) {
       console.error("Error updating stock:", err);
+      alert("Failed to toggle stock. Check console for details.");
     }
   };
 
   const handleAddItem = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${backendURL}/api/admin/menu/add`, newItem);
+      // coerce price to number
+      const payload = { ...newItem, price: Number(newItem.price), in_stock: 1 };
+      await axios.post(`${backendURL}/api/admin/menu/add`, payload);
       setShowAddForm(false);
       setNewItem({ name: "", price: "", category: "Starters", image: "" });
-      fetchMenuItems();
+      await fetchMenuItems();
     } catch (err) {
       console.error("Failed to add item:", err);
+      alert("Failed to add item. Check console for details.");
     }
   };
 
   const handleDelete = async (itemId) => {
+    if (!window.confirm("Delete this item?")) return;
     try {
       await axios.delete(`${backendURL}/api/admin/menu/delete/${itemId}`);
-      fetchMenuItems();
+      await fetchMenuItems();
     } catch (err) {
       console.error("Error deleting item:", err);
+      alert("Failed to delete item. Check console for details.");
     }
   };
 
   const handleEditSubmit = async (e) => {
     e.preventDefault();
+    if (!editItem) return;
     try {
-      await axios.put(`${backendURL}/api/admin/menu/update/${editItem.item_id}`, editItem);
+      const payload = {
+        name: editItem.name,
+        price: Number(editItem.price),
+        category: editItem.category,
+        image: editItem.image,
+        in_stock: editItem.in_stock ?? 1,
+      };
+      await axios.put(`${backendURL}/api/admin/menu/update/${editItem.item_id}`, payload);
       setEditItem(null);
-      fetchMenuItems();
+      await fetchMenuItems();
     } catch (err) {
       console.error("Failed to update item:", err);
+      alert("Failed to update item. Check console for details.");
     }
   };
 
