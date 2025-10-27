@@ -143,4 +143,23 @@
     border-radius: 8px;
     margin-bottom: 10px;
   }
-  
+
+.add-form input[type="file"] {
+  flex: none;
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  border: none;
+  background: transparent;
+}
+
+.upload-btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  display: inline-block;
+  margin-top: 10px;
+}
