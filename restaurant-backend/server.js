@@ -327,7 +327,6 @@ app.post("/api/admin/orders/:orderId/pay", async (req, res) => {
 
 // Compute stats helper function
 async function computeDashboardStats() {
-  // Adjust table names if needed (based on your actual DB)
   const results = {
     completedOrders: 0,
     totalOrders: 0,
@@ -338,37 +337,26 @@ async function computeDashboardStats() {
   };
 
   try {
-    // Using Order_History instead of PaidOrders since your DB likely has this table
-    const [r1] = await db.query(
-      "SELECT COUNT(*) AS completedOrders FROM Order_History"
-    );
-    const [r2] = await db.query(
-      "SELECT COUNT(*) AS totalOrders FROM Orders"
-    );
-    const [r3] = await db.query(
-      "SELECT COUNT(*) AS pendingOrders FROM Orders WHERE order_status != 'Paid'"
-    );
-    const [r4] = await db.query(
-      "SELECT IFNULL(SUM(total_amount), 0) AS totalRevenue FROM Payments WHERE payment_status = 'Paid'"
-    );
-    const [r5] = await db.query(
-      "SELECT COUNT(*) AS menuItemsCount FROM Menu"
-    );
-    const [r6] = await db.query(
-      "SELECT COUNT(*) AS orderHistoryCount FROM Order_History"
-    );
+    const [r1] = await db.query("SELECT COUNT(*) AS completedOrders FROM PaidOrders");
+    const [r2] = await db.query("SELECT COUNT(*) AS totalOrders FROM Orders");
+    const [r3] = await db.query("SELECT COUNT(*) AS pendingOrders FROM Orders WHERE order_status != 'Paid'");
+    const [r5] = await db.query("SELECT COUNT(*) AS menuItemsCount FROM menu");
+    const [r6] = await db.query("SELECT COUNT(*) AS orderHistoryCount FROM Order_History");
+
+    // ✅ Correct way: calculate total revenue from PaidOrders + Order_History
+    const [rev1] = await db.query("SELECT COALESCE(SUM(total_amount), 0) AS totalRevenue FROM PaidOrders");
+    const [rev2] = await db.query("SELECT COALESCE(SUM(total_amount), 0) AS totalRevenue FROM Order_History");
+
+    const totalRevenue = (rev1[0]?.totalRevenue || 0) + (rev2[0]?.totalRevenue || 0);
 
     results.completedOrders = r1[0]?.completedOrders || 0;
     results.totalOrders = r2[0]?.totalOrders || 0;
     results.pendingOrders = r3[0]?.pendingOrders || 0;
-    results.totalRevenue = r4[0]?.totalRevenue || 0;
+    results.totalRevenue = totalRevenue;
     results.menuItemsCount = r5[0]?.menuItemsCount || 0;
     results.orderHistoryCount = r6[0]?.orderHistoryCount || 0;
   } catch (err) {
-    console.warn(
-      "⚠️ Some dashboard queries failed (maybe table names differ):",
-      err.message
-    );
+    console.warn("⚠️ Some dashboard queries failed:", err.message);
   }
 
   return results;
