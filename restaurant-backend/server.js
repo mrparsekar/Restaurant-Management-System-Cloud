@@ -4,6 +4,9 @@ const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
 const db = require("./db"); // your mysql2/promise pool
+const dotenv = require("dotenv");
+const blobRoutes = require("./routes/blobService");
+const adminMenuRoutes = require("./routes/adminMenuRoutes");
 
 const app = express();
 app.use(cors());
@@ -26,10 +29,12 @@ async function tryInsertMultiple(insertFns = []) {
    Basic customer routes
    ------------------------------ */
 // ✅ Azure Blob & Admin Menu routes
-const adminMenuRoutes = require("./routes/adminMenuRoutes");
+console.log("blobRoutes:", blobRoutes);
+console.log("adminMenuRoutes:", adminMenuRoutes);
 
+app.use("/api/blob", blobRoutes);
+app.use("/api/adminmenu", adminMenuRoutes);
 // ✅ Mount the Admin Menu route
-app.use("/api/admin/menu", adminMenuRoutes);
 
 
 // test
