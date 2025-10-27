@@ -16,6 +16,8 @@ const AdminMenu = () => {
   });
   const [editItem, setEditItem] = useState(null);
   const backendURL = process.env.REACT_APP_BACKEND_URL;
+  console.log("🔍 Backend URL in use:", backendURL);
+
 
   useEffect(() => {
     fetchMenuItems();
