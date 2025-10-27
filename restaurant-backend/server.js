@@ -327,6 +327,7 @@ app.post("/api/admin/orders/:orderId/pay", async (req, res) => {
 
 // Compute stats helper function
 async function computeDashboardStats() {
+  // Adjust table names if needed (based on your actual DB)
   const results = {
     completedOrders: 0,
     totalOrders: 0,
@@ -337,26 +338,37 @@ async function computeDashboardStats() {
   };
 
   try {
-    const [r1] = await db.query("SELECT COUNT(*) AS completedOrders FROM PaidOrders");
-    const [r2] = await db.query("SELECT COUNT(*) AS totalOrders FROM Orders");
-    const [r3] = await db.query("SELECT COUNT(*) AS pendingOrders FROM Orders WHERE order_status != 'Paid'");
-    const [r5] = await db.query("SELECT COUNT(*) AS menuItemsCount FROM menu");
-    const [r6] = await db.query("SELECT COUNT(*) AS orderHistoryCount FROM Order_History");
-
-    // ✅ Correct way: calculate total revenue from PaidOrders + Order_History
-    const [rev1] = await db.query("SELECT COALESCE(SUM(total_amount), 0) AS totalRevenue FROM PaidOrders");
-    const [rev2] = await db.query("SELECT COALESCE(SUM(total_amount), 0) AS totalRevenue FROM Order_History");
-
-    const totalRevenue = (rev1[0]?.totalRevenue || 0) + (rev2[0]?.totalRevenue || 0);
+    // Using Order_History instead of PaidOrders since your DB likely has this table
+    const [r1] = await db.query(
+      "SELECT COUNT(*) AS completedOrders FROM Order_History"
+    );
+    const [r2] = await db.query(
+      "SELECT COUNT(*) AS totalOrders FROM Orders"
+    );
+    const [r3] = await db.query(
+      "SELECT COUNT(*) AS pendingOrders FROM Orders WHERE order_status != 'Paid'"
+    );
+    const [r4] = await db.query(
+      "SELECT IFNULL(SUM(total_amount), 0) AS totalRevenue FROM paid_orders"
+    );
+    const [r5] = await db.query(
+      "SELECT COUNT(*) AS menuItemsCount FROM Menu"
+    );
+    const [r6] = await db.query(
+      "SELECT COUNT(*) AS orderHistoryCount FROM Order_History"
+    );
 
     results.completedOrders = r1[0]?.completedOrders || 0;
     results.totalOrders = r2[0]?.totalOrders || 0;
     results.pendingOrders = r3[0]?.pendingOrders || 0;
-    results.totalRevenue = totalRevenue;
+    results.totalRevenue = r4[0]?.totalRevenue || 0;
     results.menuItemsCount = r5[0]?.menuItemsCount || 0;
     results.orderHistoryCount = r6[0]?.orderHistoryCount || 0;
   } catch (err) {
-    console.warn("⚠️ Some dashboard queries failed:", err.message);
+    console.warn(
+      "⚠️ Some dashboard queries failed (maybe table names differ):",
+      err.message
+    );
   }
 
   return results;
@@ -384,25 +396,65 @@ app.get("/dashboard/stats", async (req, res) => {
   }
 });
 
-
 /* ------------------------------
    Order history endpoints (alias both)
-   ------------------------------ */
+------------------------------ */
 app.get("/api/order-history", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM Order_History ORDER BY paid_time DESC LIMIT 200");
+    // Try fetching with paid_at (correct column)
+    const [rows] = await db.query(`
+      SELECT 
+        history_id,
+        order_id,
+        customer_name,
+        table_no,
+        order_time,
+        items,
+        total_amount,
+        paid_at,
+        order_status
+      FROM Order_History
+      ORDER BY paid_at DESC
+      LIMIT 200
+    `);
+
+    if (rows.length === 0) {
+      return res.json({ message: "No order history found." });
+    }
+
     res.json(rows);
   } catch (err) {
-    // Try alternative table name
+    console.warn("⚠️ Error fetching from Order_History:", err.message);
     try {
-      const [rows2] = await db.query("SELECT * FROM OrderHistory ORDER BY paid_time DESC LIMIT 200");
-      return res.json(rows2);
+      // fallback to alternative table name if needed
+      const [rows2] = await db.query(`
+        SELECT 
+          history_id,
+          order_id,
+          customer_name,
+          table_no,
+          order_time,
+          items,
+          total_amount,
+          paid_at,
+          order_status
+        FROM OrderHistory
+        ORDER BY paid_at DESC
+        LIMIT 200
+      `);
+
+      if (rows2.length === 0) {
+        return res.json({ message: "No order history found." });
+      }
+
+      res.json(rows2);
     } catch (err2) {
-      console.error("❌ Error fetching order history:", err);
-      return res.status(500).json({ error: "Failed to fetch order history" });
+      console.error("❌ Error fetching order history:", err2);
+      res.status(500).json({ error: "Failed to fetch order history" });
     }
   }
 });
+
 app.get("/order-history", (req, res) => res.redirect(307, "/api/order-history"));
 
 /* ------------------------------
