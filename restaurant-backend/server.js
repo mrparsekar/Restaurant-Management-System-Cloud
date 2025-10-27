@@ -323,8 +323,11 @@ app.post("/api/admin/orders/:orderId/pay", async (req, res) => {
 /* ------------------------------
    Dashboard stats (two routes: /api/... and /...)
    ------------------------------ */
+// ✅ ================= DASHBOARD STATS =================
+
+// Compute stats helper function
 async function computeDashboardStats() {
-  // Using lowercase menu and OrderHistory table names — adjust if your DB names differ
+  // Adjust table names if needed (based on your actual DB)
   const results = {
     completedOrders: 0,
     totalOrders: 0,
@@ -335,12 +338,25 @@ async function computeDashboardStats() {
   };
 
   try {
-    const [r1] = await db.query("SELECT COUNT(*) AS completedOrders FROM PaidOrders");
-    const [r2] = await db.query("SELECT COUNT(*) AS totalOrders FROM Orders");
-    const [r3] = await db.query("SELECT COUNT(*) AS pendingOrders FROM Orders WHERE order_status != 'Paid'");
-    const [r4] = await db.query("SELECT SUM(total_amount) AS totalRevenue FROM Payments");
-    const [r5] = await db.query("SELECT COUNT(*) AS menuItemsCount FROM menu");
-    const [r6] = await db.query("SELECT COUNT(*) AS orderHistoryCount FROM Order_History");
+    // Using Order_History instead of PaidOrders since your DB likely has this table
+    const [r1] = await db.query(
+      "SELECT COUNT(*) AS completedOrders FROM Order_History"
+    );
+    const [r2] = await db.query(
+      "SELECT COUNT(*) AS totalOrders FROM Orders"
+    );
+    const [r3] = await db.query(
+      "SELECT COUNT(*) AS pendingOrders FROM Orders WHERE order_status != 'Paid'"
+    );
+    const [r4] = await db.query(
+      "SELECT IFNULL(SUM(total_amount), 0) AS totalRevenue FROM Payments WHERE payment_status = 'Paid'"
+    );
+    const [r5] = await db.query(
+      "SELECT COUNT(*) AS menuItemsCount FROM Menu"
+    );
+    const [r6] = await db.query(
+      "SELECT COUNT(*) AS orderHistoryCount FROM Order_History"
+    );
 
     results.completedOrders = r1[0]?.completedOrders || 0;
     results.totalOrders = r2[0]?.totalOrders || 0;
@@ -349,30 +365,37 @@ async function computeDashboardStats() {
     results.menuItemsCount = r5[0]?.menuItemsCount || 0;
     results.orderHistoryCount = r6[0]?.orderHistoryCount || 0;
   } catch (err) {
-    console.warn("⚠️ Some dashboard queries failed (maybe table names differ):", err.message);
+    console.warn(
+      "⚠️ Some dashboard queries failed (maybe table names differ):",
+      err.message
+    );
   }
 
   return results;
 }
 
+// Main API route used by frontend
 app.get("/api/dashboard/stats", async (req, res) => {
   try {
     const stats = await computeDashboardStats();
     res.json(stats);
   } catch (err) {
+    console.error("❌ Error fetching dashboard stats:", err);
     res.status(500).json({ error: "Failed to fetch dashboard stats" });
   }
 });
 
-// alias for older frontend expecting /dashboard/stats
+// Alias for backward compatibility (in case frontend calls /dashboard/stats)
 app.get("/dashboard/stats", async (req, res) => {
   try {
     const stats = await computeDashboardStats();
     res.json(stats);
   } catch (err) {
+    console.error("❌ Error fetching dashboard stats (alias):", err);
     res.status(500).json({ error: "Failed to fetch dashboard stats" });
   }
 });
+
 
 /* ------------------------------
    Order history endpoints (alias both)
