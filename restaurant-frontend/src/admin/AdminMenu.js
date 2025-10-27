@@ -12,12 +12,11 @@ const AdminMenu = () => {
     name: "",
     price: "",
     category: "Starters",
-    image: ""
+    imageFile: null
   });
   const [editItem, setEditItem] = useState(null);
   const backendURL = process.env.REACT_APP_BACKEND_URL;
   console.log("🔍 Backend URL in use:", backendURL);
-
 
   useEffect(() => {
     fetchMenuItems();
@@ -35,7 +34,6 @@ const AdminMenu = () => {
 
   const handleToggleStock = async (itemId) => {
     try {
-      // Correct endpoint is /api/admin/menu/toggle-stock/:id
       await axios.put(`${backendURL}/api/admin/menu/toggle-stock/${itemId}`);
       await fetchMenuItems();
     } catch (err) {
@@ -47,11 +45,21 @@ const AdminMenu = () => {
   const handleAddItem = async (e) => {
     e.preventDefault();
     try {
-      // coerce price to number
-      const payload = { ...newItem, price: Number(newItem.price), in_stock: 1 };
-      await axios.post(`${backendURL}/api/admin/menu/add`, payload);
+      const formData = new FormData();
+      formData.append("name", newItem.name);
+      formData.append("price", newItem.price);
+      formData.append("category", newItem.category);
+      formData.append("in_stock", 1);
+      if (newItem.imageFile) {
+        formData.append("image", newItem.imageFile);
+      }
+
+      await axios.post(`${backendURL}/api/admin/menu/add`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       setShowAddForm(false);
-      setNewItem({ name: "", price: "", category: "Starters", image: "" });
+      setNewItem({ name: "", price: "", category: "Starters", imageFile: null });
       await fetchMenuItems();
     } catch (err) {
       console.error("Failed to add item:", err);
@@ -74,14 +82,19 @@ const AdminMenu = () => {
     e.preventDefault();
     if (!editItem) return;
     try {
-      const payload = {
-        name: editItem.name,
-        price: Number(editItem.price),
-        category: editItem.category,
-        image: editItem.image,
-        in_stock: editItem.in_stock ?? 1,
-      };
-      await axios.put(`${backendURL}/api/admin/menu/update/${editItem.item_id}`, payload);
+      const formData = new FormData();
+      formData.append("name", editItem.name);
+      formData.append("price", editItem.price);
+      formData.append("category", editItem.category);
+      formData.append("in_stock", editItem.in_stock ?? 1);
+      if (editItem.imageFile) {
+        formData.append("image", editItem.imageFile);
+      }
+
+      await axios.put(`${backendURL}/api/admin/menu/update/${editItem.item_id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       setEditItem(null);
       await fetchMenuItems();
     } catch (err) {
@@ -131,10 +144,9 @@ const AdminMenu = () => {
             <option value="Beverages">Beverages</option>
           </select>
           <input
-            type="text"
-            placeholder="Image URL"
-            value={newItem.image}
-            onChange={(e) => setNewItem({ ...newItem, image: e.target.value })}
+            type="file"
+            accept="image/*"
+            onChange={(e) => setNewItem({ ...newItem, imageFile: e.target.files[0] })}
           />
           <div className="form-buttons">
             <button type="submit" className="submit-btn">Add Item</button>
@@ -168,10 +180,9 @@ const AdminMenu = () => {
             <option value="Beverages">Beverages</option>
           </select>
           <input
-            type="text"
-            placeholder="Image URL"
-            value={editItem.image}
-            onChange={(e) => setEditItem({ ...editItem, image: e.target.value })}
+            type="file"
+            accept="image/*"
+            onChange={(e) => setEditItem({ ...editItem, imageFile: e.target.files[0] })}
           />
           <div className="form-buttons">
             <button type="submit" className="submit-btn">Update</button>
