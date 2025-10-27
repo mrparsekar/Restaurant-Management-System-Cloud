@@ -24,7 +24,7 @@ jobs:
         working-directory: restaurant-backend
         run: |
           npm install
-          npm install bcrypt @azure/storage-blob multer dotenv
+          npm install bcrypt @azure/storage-blob multer dotenv uuid
 
       # 4. Optional: Run backend tests
       - name: Run backend tests
@@ -51,3 +51,4 @@ jobs:
           slot-name: production
           package: ./restaurant-backend
           working-directory: restaurant-backend
+
