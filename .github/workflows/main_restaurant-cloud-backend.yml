@@ -19,12 +19,12 @@ jobs:
         with:
           node-version: '22'
 
-      # 3. Install backend dependencies (ensure bcrypt installed)
+      # 3. Install backend dependencies (including required packages)
       - name: Install backend dependencies
         working-directory: restaurant-backend
         run: |
           npm install
-          npm install bcrypt
+          npm install bcrypt @azure/storage-blob multer dotenv
 
       # 4. Optional: Run backend tests
       - name: Run backend tests
