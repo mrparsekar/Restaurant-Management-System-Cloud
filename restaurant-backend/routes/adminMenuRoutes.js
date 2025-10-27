@@ -1,8 +1,8 @@
 // backend/routes/adminMenuRoutes.js
-import express from "express";
-import multer from "multer";
-import db from "../db.js";
-import { uploadToBlob, deleteFromBlob, generateSasUrl } from "./blobServices.js";
+const express = require("express");
+const multer = require("multer");
+const db = require("../db.js");
+const { uploadToBlob, deleteFromBlob, generateSasUrl } = require("./blobServices.js");
 
 const router = express.Router();
 const upload = multer(); // Handle multipart/form-data uploads
@@ -79,4 +79,4 @@ router.put("/api/admin/menu/:id/stock", async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;
