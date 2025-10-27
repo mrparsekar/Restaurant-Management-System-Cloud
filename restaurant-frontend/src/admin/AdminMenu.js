@@ -12,9 +12,11 @@ const AdminMenu = () => {
     name: "",
     price: "",
     category: "Starters",
-    imageFile: null
+    imageFile: null,
   });
+  const [previewImage, setPreviewImage] = useState(null);
   const [editItem, setEditItem] = useState(null);
+
   const backendURL = process.env.REACT_APP_BACKEND_URL;
   console.log("🔍 Backend URL in use:", backendURL);
 
@@ -60,6 +62,7 @@ const AdminMenu = () => {
 
       setShowAddForm(false);
       setNewItem({ name: "", price: "", category: "Starters", imageFile: null });
+      setPreviewImage(null);
       await fetchMenuItems();
     } catch (err) {
       console.error("Failed to add item:", err);
@@ -117,6 +120,7 @@ const AdminMenu = () => {
         + Add New Item
       </button>
 
+      {/* Add Form */}
       {showAddForm && (
         <form className="add-form" onSubmit={handleAddItem}>
           <input
@@ -143,11 +147,27 @@ const AdminMenu = () => {
             <option value="Drinks">Drinks</option>
             <option value="Beverages">Beverages</option>
           </select>
+
+          {/* Image Upload */}
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => setNewItem({ ...newItem, imageFile: e.target.files[0] })}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              setNewItem({ ...newItem, imageFile: file });
+              if (file) setPreviewImage(URL.createObjectURL(file));
+            }}
           />
+
+          {/* Preview */}
+          {previewImage && (
+            <img
+              src={previewImage}
+              alt="Preview"
+              style={{ width: "150px", borderRadius: "10px", marginTop: "10px" }}
+            />
+          )}
+
           <div className="form-buttons">
             <button type="submit" className="submit-btn">Add Item</button>
             <button type="button" onClick={() => setShowAddForm(false)} className="cancel-btn">Cancel</button>
@@ -155,6 +175,7 @@ const AdminMenu = () => {
         </form>
       )}
 
+      {/* Edit Form */}
       {editItem && (
         <form className="add-form" onSubmit={handleEditSubmit}>
           <input
@@ -179,11 +200,13 @@ const AdminMenu = () => {
             <option value="Drinks">Drinks</option>
             <option value="Beverages">Beverages</option>
           </select>
+
           <input
             type="file"
             accept="image/*"
             onChange={(e) => setEditItem({ ...editItem, imageFile: e.target.files[0] })}
           />
+
           <div className="form-buttons">
             <button type="submit" className="submit-btn">Update</button>
             <button type="button" onClick={() => setEditItem(null)} className="cancel-btn">Cancel</button>
@@ -191,6 +214,7 @@ const AdminMenu = () => {
         </form>
       )}
 
+      {/* Filters */}
       <div className="filter-controls">
         <input
           type="text"
@@ -213,6 +237,7 @@ const AdminMenu = () => {
         </select>
       </div>
 
+      {/* Menu Items Grid */}
       <div className="menu-items-grid">
         {filteredItems.map((item) => (
           <div key={item.item_id} className="menu-item-card">
