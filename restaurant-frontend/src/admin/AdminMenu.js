@@ -18,7 +18,7 @@ const AdminMenu = () => {
   const [editItem, setEditItem] = useState(null);
 
   const backendURL = process.env.REACT_APP_BACKEND_URL;
-  console.log("🔍 Backend URL in use:", backendURL);
+  console.log("✅ Backend URL:", backendURL);
 
   useEffect(() => {
     fetchMenuItems();
@@ -30,20 +30,10 @@ const AdminMenu = () => {
       setMenuItems(res.data || []);
     } catch (err) {
       console.error("Failed to fetch menu:", err);
-      setMenuItems([]);
     }
   };
 
-  const handleToggleStock = async (itemId) => {
-    try {
-      await axios.put(`${backendURL}/api/admin/menu/toggle-stock/${itemId}`);
-      await fetchMenuItems();
-    } catch (err) {
-      console.error("Error updating stock:", err);
-      alert("Failed to toggle stock. Check console for details.");
-    }
-  };
-
+  // ✅ Add new item with image upload
   const handleAddItem = async (e) => {
     e.preventDefault();
     try {
@@ -53,37 +43,27 @@ const AdminMenu = () => {
       formData.append("category", newItem.category);
       formData.append("in_stock", 1);
       if (newItem.imageFile) {
-        formData.append("image", newItem.imageFile);
+        formData.append("image", newItem.imageFile); // File upload
       }
 
-      await axios.post(`${backendURL}/api/admin/menu/add`, formData, {
+      const res = await axios.post(`${backendURL}/api/admin/menu/add`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      alert("✅ Item added successfully!");
       setShowAddForm(false);
       setNewItem({ name: "", price: "", category: "Starters", imageFile: null });
       setPreviewImage(null);
-      await fetchMenuItems();
+      fetchMenuItems();
     } catch (err) {
-      console.error("Failed to add item:", err);
-      alert("Failed to add item. Check console for details.");
+      console.error("Error adding item:", err);
+      alert("❌ Failed to add item. Check console for details.");
     }
   };
 
-  const handleDelete = async (itemId) => {
-    if (!window.confirm("Delete this item?")) return;
-    try {
-      await axios.delete(`${backendURL}/api/admin/menu/delete/${itemId}`);
-      await fetchMenuItems();
-    } catch (err) {
-      console.error("Error deleting item:", err);
-      alert("Failed to delete item. Check console for details.");
-    }
-  };
-
+  // ✅ Update existing item
   const handleEditSubmit = async (e) => {
     e.preventDefault();
-    if (!editItem) return;
     try {
       const formData = new FormData();
       formData.append("name", editItem.name);
@@ -98,14 +78,37 @@ const AdminMenu = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      alert("✅ Item updated successfully!");
       setEditItem(null);
-      await fetchMenuItems();
+      fetchMenuItems();
     } catch (err) {
-      console.error("Failed to update item:", err);
-      alert("Failed to update item. Check console for details.");
+      console.error("Error updating item:", err);
+      alert("❌ Failed to update item.");
     }
   };
 
+  // ✅ Delete item
+  const handleDelete = async (itemId) => {
+    if (!window.confirm("Are you sure you want to delete this item?")) return;
+    try {
+      await axios.delete(`${backendURL}/api/admin/menu/delete/${itemId}`);
+      fetchMenuItems();
+    } catch (err) {
+      console.error("Error deleting item:", err);
+    }
+  };
+
+  // ✅ Toggle Stock
+  const handleToggleStock = async (itemId) => {
+    try {
+      await axios.put(`${backendURL}/api/admin/menu/toggle-stock/${itemId}`);
+      fetchMenuItems();
+    } catch (err) {
+      console.error("Error toggling stock:", err);
+    }
+  };
+
+  // ✅ Filter + Search
   const filteredItems = menuItems.filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === "All" || item.category === categoryFilter;
@@ -120,7 +123,7 @@ const AdminMenu = () => {
         + Add New Item
       </button>
 
-      {/* Add Form */}
+      {/* ✅ Add Item Form */}
       {showAddForm && (
         <form className="add-form" onSubmit={handleAddItem}>
           <input
@@ -160,7 +163,6 @@ const AdminMenu = () => {
             className="file-upload"
           />
 
-          {/* Preview */}
           {previewImage && (
             <img
               src={previewImage}
@@ -170,13 +172,17 @@ const AdminMenu = () => {
           )}
 
           <div className="form-buttons">
-            <button type="submit" className="submit-btn">Add Item</button>
-            <button type="button" onClick={() => setShowAddForm(false)} className="cancel-btn">Cancel</button>
+            <button type="submit" className="submit-btn">
+              Add Item
+            </button>
+            <button type="button" onClick={() => setShowAddForm(false)} className="cancel-btn">
+              Cancel
+            </button>
           </div>
         </form>
       )}
 
-      {/* Edit Form */}
+      {/* ✅ Edit Item Form */}
       {editItem && (
         <form className="add-form" onSubmit={handleEditSubmit}>
           <input
@@ -202,6 +208,7 @@ const AdminMenu = () => {
             <option value="Beverages">Beverages</option>
           </select>
 
+          {/* ✅ Update image */}
           <input
             type="file"
             accept="image/*"
@@ -215,7 +222,7 @@ const AdminMenu = () => {
         </form>
       )}
 
-      {/* Filters */}
+      {/* ✅ Search + Filter */}
       <div className="filter-controls">
         <input
           type="text"
@@ -238,7 +245,7 @@ const AdminMenu = () => {
         </select>
       </div>
 
-      {/* Menu Items Grid */}
+      {/* ✅ Menu Grid */}
       <div className="menu-items-grid">
         {filteredItems.map((item) => (
           <div key={item.item_id} className="menu-item-card">
