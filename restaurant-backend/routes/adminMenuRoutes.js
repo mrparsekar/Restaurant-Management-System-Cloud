@@ -5,9 +5,9 @@ import db from "../db.js";
 import { uploadToBlob, deleteFromBlob, generateSasUrl } from "./blobServices.js";
 
 const router = express.Router();
-const upload = multer(); // To handle multipart/form-data uploads
+const upload = multer(); // Handle multipart/form-data uploads
 
-// ✅ Add new menu item with image upload to Azure Blob
+// ✅ Add new menu item (image upload handled)
 router.post("/menu/add", upload.single("image"), async (req, res) => {
   try {
     const { name, category, price, in_stock } = req.body;
@@ -19,7 +19,7 @@ router.post("/menu/add", upload.single("image"), async (req, res) => {
 
     await db.query(
       "INSERT INTO menu (name, category, price, image, in_stock) VALUES (?, ?, ?, ?, ?)",
-      [name, category, price, imageUrl, in_stock]
+      [name, category, price, imageUrl, in_stock ?? 1]
     );
 
     res.status(200).json({ message: "✅ Menu item added successfully!" });
@@ -29,7 +29,7 @@ router.post("/menu/add", upload.single("image"), async (req, res) => {
   }
 });
 
-// ✅ Fetch all menu items (with secure SAS URLs)
+// ✅ Fetch all menu items (with SAS for secure access)
 router.get("/menu", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM menu");
@@ -49,7 +49,7 @@ router.get("/menu", async (req, res) => {
   }
 });
 
-// ✅ Delete a menu item (and its blob)
+// ✅ Delete menu item (and image from blob)
 router.delete("/menu/delete/:id", async (req, res) => {
   try {
     const [[item]] = await db.query("SELECT image FROM menu WHERE item_id = ?", [req.params.id]);
@@ -67,7 +67,7 @@ router.delete("/menu/delete/:id", async (req, res) => {
   }
 });
 
-// ✅ Update stock status
+// ✅ Toggle stock availability
 router.put("/menu/:id/stock", async (req, res) => {
   try {
     const { in_stock } = req.body;
