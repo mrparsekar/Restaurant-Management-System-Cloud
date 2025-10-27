@@ -60,7 +60,25 @@ const OrderHistory = () => {
                 <td>{order.customer_name}</td>
                 <td>{order.table_no}</td>
                 <td>{order.order_time ? new Date(order.order_time).toLocaleString() : "N/A"}</td>
-                <td className="items-cell">{order.items}</td>
+                <td>
+  {(() => {
+    try {
+      const parsedItems = JSON.parse(order.items);
+      if (Array.isArray(parsedItems)) {
+        return parsedItems.map((item, idx) => (
+          <span key={idx}>
+            {item.item_name} (x{item.quantity})
+            {idx < parsedItems.length - 1 ? ', ' : ''}
+          </span>
+        ));
+      } else {
+        return order.items;
+      }
+    } catch (err) {
+      return order.items; // Fallback for older formatted strings
+    }
+  })()}
+</td>
                 <td>₹{order.total_amount}</td>
                 <td>{order.paid_at ? new Date(order.paid_at).toLocaleString() : "N/A"}</td>
                 <td className="order-status">{order.order_status}</td>
