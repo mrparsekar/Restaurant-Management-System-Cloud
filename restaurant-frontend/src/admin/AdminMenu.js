@@ -148,19 +148,17 @@ const AdminMenu = () => {
             <option value="Beverages">Beverages</option>
           </select>
 
-       <label htmlFor="fileUpload" className="upload-btn">Choose Image</label>
-<input
-  id="fileUpload"
-  type="file"
-  accept="image/*"
-  style={{ display: "none" }}
-  onChange={(e) => {
-    const file = e.target.files[0];
-    setNewItem({ ...newItem, imageFile: file });
-    if (file) setPreviewImage(URL.createObjectURL(file));
-  }}
-/>
-
+          {/* ✅ Image Upload */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              setNewItem({ ...newItem, imageFile: file });
+              if (file) setPreviewImage(URL.createObjectURL(file));
+            }}
+            className="file-upload"
+          />
 
           {/* Preview */}
           {previewImage && (
