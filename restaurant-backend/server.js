@@ -3,12 +3,13 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const bcrypt = require("bcrypt");
-const db = require("./db"); // your mysql2/promise pool
-const dotenv = require("dotenv");
-const blobRoutes = require("./routes/blobService");
-const adminMenuRoutes = require("./routes/adminMenuRoutes");
+const db = require("./db"); // MySQL connection (mysql2/promise)
+const adminMenuRoutes = require("./routes/adminMenuRoutes"); // ✅ keep as ES module or convert properly
+// ❌ No need for blobService route directly — it’s already imported inside adminMenuRoutes
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -28,13 +29,12 @@ async function tryInsertMultiple(insertFns = []) {
 /* ------------------------------
    Basic customer routes
    ------------------------------ */
-// ✅ Azure Blob & Admin Menu routes
-console.log("blobRoutes:", blobRoutes);
-console.log("adminMenuRoutes:", adminMenuRoutes);
-
-app.use("/api/blob", blobRoutes);
+// ✅ Admin Menu routes (includes blob upload/delete internally)
 app.use("/api/adminmenu", adminMenuRoutes);
-// ✅ Mount the Admin Menu route
+
+app.get("/", (req, res) => {
+  res.send("✅ Restaurant Backend API is running successfully!");
+});
 
 
 // test
