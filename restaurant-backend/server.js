@@ -349,7 +349,7 @@ async function computeDashboardStats() {
       "SELECT COUNT(*) AS pendingOrders FROM Orders WHERE order_status != 'Paid'"
     );
     const [r4] = await db.query(
-      "SELECT IFNULL(SUM(total_amount), 0) AS totalRevenue FROM paid_orders"
+      "SELECT IFNULL(SUM(total_amount), 0) AS totalRevenue FROM payments"
     );
     const [r5] = await db.query(
       "SELECT COUNT(*) AS menuItemsCount FROM Menu"
