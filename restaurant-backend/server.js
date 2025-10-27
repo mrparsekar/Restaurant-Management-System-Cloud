@@ -25,6 +25,12 @@ async function tryInsertMultiple(insertFns = []) {
 /* ------------------------------
    Basic customer routes
    ------------------------------ */
+// ✅ Azure Blob & Admin Menu routes
+const adminMenuRoutes = require("./routes/adminMenuRoutes");
+
+// ✅ Mount the Admin Menu route
+app.use("/api/admin/menu", adminMenuRoutes);
+
 
 // test
 app.get("/test", (req, res) => res.send("Backend is running!"));
@@ -457,16 +463,6 @@ app.get("/api/order-history", async (req, res) => {
 });
 
 app.get("/order-history", (req, res) => res.redirect(307, "/api/order-history"));
-
-// after existing middlewares and routes...
-// mount the admin menu routes
-try {
-  const adminMenuRoutes = require("./routes/adminMenuRoutes");
-  app.use("/api/admin", adminMenuRoutes);
-  console.log("✅ adminMenuRoutes mounted");
-} catch (err) {
-  console.error("⚠️ Failed to mount adminMenuRoutes:", err.message);
-}
 
 
 /* ------------------------------
