@@ -15,13 +15,15 @@ const AdminMenu = () => {
   });
   const [editItem, setEditItem] = useState(null);
 
+  const backendURL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+
   useEffect(() => {
     fetchMenuItems();
   }, []);
 
   const fetchMenuItems = async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/admin/menu`);
+      const res = await axios.get(`${backendURL}/api/admin/menu`);
       setMenuItems(res.data);
     } catch (err) {
       console.error("Failed to fetch menu:", err);
@@ -30,7 +32,7 @@ const AdminMenu = () => {
 
   const handleToggleStock = async (itemId) => {
     try {
-      await axios.put(`/api/admin/menu/toggle-stock/:id/${itemId}/stock`);
+      await axios.put(`${backendURL}/api/admin/menu/toggle-stock/${itemId}`);
       fetchMenuItems();
     } catch (err) {
       console.error("Error updating stock:", err);
@@ -40,7 +42,7 @@ const AdminMenu = () => {
   const handleAddItem = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/admin/menu/add", newItem);
+      await axios.post(`${backendURL}/api/admin/menu/add`, newItem);
       setShowAddForm(false);
       setNewItem({ name: "", price: "", category: "Starters", image: "" });
       fetchMenuItems();
@@ -51,7 +53,7 @@ const AdminMenu = () => {
 
   const handleDelete = async (itemId) => {
     try {
-      await axios.delete(`/api/admin/menu/delete/:id/${itemId}`);
+      await axios.delete(`${backendURL}/api/admin/menu/delete/${itemId}`);
       fetchMenuItems();
     } catch (err) {
       console.error("Error deleting item:", err);
@@ -61,7 +63,7 @@ const AdminMenu = () => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/api/admin/menu/${editItem.item_id}`, editItem);
+      await axios.put(`${backendURL}/api/admin/menu/update/${editItem.item_id}`, editItem);
       setEditItem(null);
       fetchMenuItems();
     } catch (err) {
