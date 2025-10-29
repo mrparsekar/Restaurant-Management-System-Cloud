@@ -11,7 +11,7 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 
 // Helper: try multiple insert targets so we work with different DB schemas
