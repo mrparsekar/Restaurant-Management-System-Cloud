@@ -8,7 +8,7 @@ const router = express.Router();
 const upload = multer(); // Handle multipart/form-data uploads
 
 // ✅ Add new menu item
-router.post("/add", upload.single("image"), async (req, res) => {
+router.post("/menu/add", upload.single("image"), async (req, res) => {
   try {
     const { name, category, price, in_stock } = req.body;
     let imageUrl = null;
