@@ -50,7 +50,7 @@ router.get("/menu", async (req, res) => {
 });
 
 // ✅ Delete menu item
-router.delete("menu/delete/:id", async (req, res) => {
+router.delete("/delete/:id", async (req, res) => {
   try {
     const [[item]] = await db.query("SELECT image FROM menu WHERE item_id = ?", [req.params.id]);
 
@@ -68,7 +68,7 @@ router.delete("menu/delete/:id", async (req, res) => {
 });
 
 // ✅ Update stock availability
-router.put("menu/toggle-stock/:id", async (req, res) => {
+router.put("/toggle-stock/:id", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT in_stock FROM menu WHERE item_id = ?", [req.params.id]);
     if (rows.length === 0) return res.status(404).send("Item not found");
