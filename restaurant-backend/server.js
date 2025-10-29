@@ -149,30 +149,7 @@ app.get("/api/admin/menu", async (req, res) => {
 });
 
 // add item
-app.post('/api/adminmenu/add', upload.single('image'), async (req, res) => {
-   try {
-    // multer will populate req.body (text fields) and req.file (if present)
-    const { name, category, price, in_stock } = req.body;
-    let imageUrl = null;
-
-    if (req.file) {
-      imageUrl = await uploadToBlob(req.file);
-    }
-
-    await db.query(
-      "INSERT INTO menu (name, category, price, image, in_stock) VALUES (?, ?, ?, ?, ?)",
-      [name, category, price, imageUrl, in_stock ?? 1]
-    );
-
-    res.status(200).json({ message: "Menu item added" });
-  } catch (err) {
-    console.error("adminMenuRoutes.add error:", err);
-    res.status(500).send("Server error while adding item");
-  }
-});
-
-
-/* app.post("/api/admin/menu/add", async (req, res) => {
+ app.post("/api/admin/menu/add", async (req, res) => {
   const { name, category, price, image, in_stock } = req.body;
   try {
     await db.query(
@@ -185,7 +162,7 @@ app.post('/api/adminmenu/add', upload.single('image'), async (req, res) => {
     res.status(500).json({ error: "Failed to add menu item" });
   }
 });
-*/
+
 // update item
 app.put("/api/admin/menu/update/:id", async (req, res) => {
   const { id } = req.params;
