@@ -33,7 +33,7 @@ const AdminMenu = () => {
     }
   };
 
-  // ✅ Add new item
+  // ✅ Add new item with image upload
   const handleAddItem = async (e) => {
     e.preventDefault();
     try {
@@ -42,9 +42,11 @@ const AdminMenu = () => {
       formData.append("price", newItem.price);
       formData.append("category", newItem.category);
       formData.append("in_stock", 1);
-      if (newItem.imageFile) formData.append("image", newItem.imageFile);
+      if (newItem.imageFile) {
+        formData.append("image", newItem.imageFile); // File upload
+      }
 
-      await axios.post(`${backendURL}/api/adminmenu/add`, formData, {
+      const res = await axios.post(`${backendURL}/api/adminmenu/menu/add`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -59,11 +61,37 @@ const AdminMenu = () => {
     }
   };
 
+  // ✅ Update existing item
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append("name", editItem.name);
+      formData.append("price", editItem.price);
+      formData.append("category", editItem.category);
+      formData.append("in_stock", editItem.in_stock ?? 1);
+      if (editItem.imageFile) {
+        formData.append("image", editItem.imageFile);
+      }
+
+      await axios.put(`${backendURL}/api/adminmenu/menu/update/${editItem.item_id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert("✅ Item updated successfully!");
+      setEditItem(null);
+      fetchMenuItems();
+    } catch (err) {
+      console.error("Error updating item:", err);
+      alert("❌ Failed to update item.");
+    }
+  };
+
   // ✅ Delete item
   const handleDelete = async (itemId) => {
     if (!window.confirm("Are you sure you want to delete this item?")) return;
     try {
-      await axios.delete(`${backendURL}/api/adminmenu/delete/${itemId}`);
+      await axios.delete(`${backendURL}/api/adminmenu/menu/delete/${itemId}`);
       fetchMenuItems();
     } catch (err) {
       console.error("Error deleting item:", err);
@@ -73,7 +101,7 @@ const AdminMenu = () => {
   // ✅ Toggle Stock
   const handleToggleStock = async (itemId) => {
     try {
-      await axios.put(`${backendURL}/api/adminmenu/toggle-stock/${itemId}`);
+      await axios.put(`${backendURL}/api/adminmenu/menu/toggle-stock/${itemId}`);
       fetchMenuItems();
     } catch (err) {
       console.error("Error toggling stock:", err);
@@ -98,12 +126,24 @@ const AdminMenu = () => {
       {/* ✅ Add Item Form */}
       {showAddForm && (
         <form className="add-form" onSubmit={handleAddItem}>
-          <input type="text" placeholder="Item Name" value={newItem.name}
-            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} required />
-          <input type="number" placeholder="Price" value={newItem.price}
-            onChange={(e) => setNewItem({ ...newItem, price: e.target.value })} required />
-          <select value={newItem.category}
-            onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}>
+          <input
+            type="text"
+            placeholder="Item Name"
+            value={newItem.name}
+            onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
+            required
+          />
+          <input
+            type="number"
+            placeholder="Price"
+            value={newItem.price}
+            onChange={(e) => setNewItem({ ...newItem, price: e.target.value })}
+            required
+          />
+          <select
+            value={newItem.category}
+            onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+          >
             <option value="Starters">Starters</option>
             <option value="Main Course">Main Course</option>
             <option value="Desserts">Desserts</option>
@@ -112,33 +152,90 @@ const AdminMenu = () => {
           </select>
 
           {/* ✅ Image Upload */}
-          <input type="file" accept="image/*"
+          <input
+            type="file"
+            accept="image/*"
             onChange={(e) => {
               const file = e.target.files[0];
               setNewItem({ ...newItem, imageFile: file });
               if (file) setPreviewImage(URL.createObjectURL(file));
-            }} className="file-upload" />
+            }}
+            className="file-upload"
+          />
 
           {previewImage && (
-            <img src={previewImage} alt="Preview"
-              style={{ width: "150px", borderRadius: "10px", marginTop: "10px" }} />
+            <img
+              src={previewImage}
+              alt="Preview"
+              style={{ width: "150px", borderRadius: "10px", marginTop: "10px" }}
+            />
           )}
 
           <div className="form-buttons">
-            <button type="submit" className="submit-btn">Add Item</button>
-            <button type="button" onClick={() => setShowAddForm(false)} className="cancel-btn">Cancel</button>
+            <button type="submit" className="submit-btn">
+              Add Item
+            </button>
+            <button type="button" onClick={() => setShowAddForm(false)} className="cancel-btn">
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* ✅ Edit Item Form */}
+      {editItem && (
+        <form className="add-form" onSubmit={handleEditSubmit}>
+          <input
+            type="text"
+            value={editItem.name}
+            onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
+            required
+          />
+          <input
+            type="number"
+            value={editItem.price}
+            onChange={(e) => setEditItem({ ...editItem, price: e.target.value })}
+            required
+          />
+          <select
+            value={editItem.category}
+            onChange={(e) => setEditItem({ ...editItem, category: e.target.value })}
+          >
+            <option value="Starters">Starters</option>
+            <option value="Main Course">Main Course</option>
+            <option value="Desserts">Desserts</option>
+            <option value="Drinks">Drinks</option>
+            <option value="Beverages">Beverages</option>
+          </select>
+
+          {/* ✅ Update image */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setEditItem({ ...editItem, imageFile: e.target.files[0] })}
+          />
+
+          <div className="form-buttons">
+            <button type="submit" className="submit-btn">Update</button>
+            <button type="button" onClick={() => setEditItem(null)} className="cancel-btn">Cancel</button>
           </div>
         </form>
       )}
 
       {/* ✅ Search + Filter */}
       <div className="filter-controls">
-        <input type="text" placeholder="Search items..."
-          value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-          className="search-input" />
-        <select value={categoryFilter}
+        <input
+          type="text"
+          placeholder="Search items..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
+        <select
+          value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="category-select">
+          className="category-select"
+        >
           <option value="All">All Categories</option>
           <option value="Starters">Starters</option>
           <option value="Main Course">Main Course</option>
@@ -152,18 +249,24 @@ const AdminMenu = () => {
       <div className="menu-items-grid">
         {filteredItems.map((item) => (
           <div key={item.item_id} className="menu-item-card">
-            <img src={item.image || "https://via.placeholder.com/150x100?text=No+Image"}
-              alt={item.name} className="menu-item-image" />
+            <img
+              src={item.image || "https://via.placeholder.com/150x100?text=No+Image"}
+              alt={item.name}
+              className="menu-item-image"
+            />
             <div>
               <h4 className="menu-item-name">{item.name}</h4>
               <p>₹{item.price} | {item.category}</p>
               {!item.in_stock && <span className="out-of-stock-label">Out of Stock</span>}
             </div>
             <div className="button-group">
-              <button onClick={() => handleToggleStock(item.item_id)}
-                className={`stock-toggle-btn ${!item.in_stock ? "in-stock" : "out-stock"}`}>
+              <button
+                onClick={() => handleToggleStock(item.item_id)}
+                className={`stock-toggle-btn ${!item.in_stock ? "in-stock" : "out-stock"}`}
+              >
                 {item.in_stock ? "Mark Out of Stock" : "Mark In Stock"}
               </button>
+              <button onClick={() => setEditItem(item)} className="edit-btn">Edit</button>
               <button onClick={() => handleDelete(item.item_id)} className="delete-btn">Delete</button>
             </div>
           </div>
