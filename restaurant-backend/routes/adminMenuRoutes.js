@@ -7,8 +7,8 @@ const { uploadToBlob, deleteFromBlob, generateSasUrl } = require("./blobServices
 const router = express.Router();
 const upload = multer(); // Handle multipart/form-data uploads
 
-// ✅ Add new menu item (image upload handled)
-router.post("/api/admin/menu/add", upload.single("image"), async (req, res) => {
+// ✅ Add new menu item
+router.post("/add", upload.single("image"), async (req, res) => {
   try {
     const { name, category, price, in_stock } = req.body;
     let imageUrl = null;
@@ -29,7 +29,7 @@ router.post("/api/admin/menu/add", upload.single("image"), async (req, res) => {
   }
 });
 
-// ✅ Fetch all menu items (with SAS for secure access)
+// ✅ Get all menu items
 router.get("/menu", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM menu");
@@ -49,8 +49,8 @@ router.get("/menu", async (req, res) => {
   }
 });
 
-// ✅ Delete menu item (and image from blob)
-router.delete("/api/admin/menu/delete/:id", async (req, res) => {
+// ✅ Delete menu item
+router.delete("/delete/:id", async (req, res) => {
   try {
     const [[item]] = await db.query("SELECT image FROM menu WHERE item_id = ?", [req.params.id]);
 
@@ -67,11 +67,16 @@ router.delete("/api/admin/menu/delete/:id", async (req, res) => {
   }
 });
 
-// ✅ Toggle stock availability
-router.put("/api/admin/menu/:id/stock", async (req, res) => {
+// ✅ Update stock availability
+router.put("/toggle-stock/:id", async (req, res) => {
   try {
-    const { in_stock } = req.body;
-    await db.query("UPDATE menu SET in_stock = ? WHERE item_id = ?", [in_stock, req.params.id]);
+    const [rows] = await db.query("SELECT in_stock FROM menu WHERE item_id = ?", [req.params.id]);
+    if (rows.length === 0) return res.status(404).send("Item not found");
+
+    const currentStock = rows[0].in_stock;
+    const newStock = currentStock ? 0 : 1;
+
+    await db.query("UPDATE menu SET in_stock = ? WHERE item_id = ?", [newStock, req.params.id]);
     res.json({ message: "✅ Stock status updated" });
   } catch (err) {
     console.error("❌ Error updating stock:", err);
