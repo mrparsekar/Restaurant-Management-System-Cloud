@@ -46,7 +46,7 @@ const AdminMenu = () => {
         formData.append("image", newItem.imageFile); // File upload
       }
 
-      const res = await axios.post(`${backendURL}/api/adminmenu/menu/add`, formData, {
+      const res = await axios.post("https://restaurant-cloud-backend.azurewebsites.net/api/adminmenu/add", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
