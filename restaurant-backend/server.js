@@ -149,7 +149,7 @@ app.get("/api/admin/menu", async (req, res) => {
 });
 
 // add item
-app.post("/api/admin/menu/add", async (req, res) => {
+/* app.post("/api/admin/menu/add", async (req, res) => {
   const { name, category, price, image, in_stock } = req.body;
   try {
     await db.query(
@@ -162,7 +162,7 @@ app.post("/api/admin/menu/add", async (req, res) => {
     res.status(500).json({ error: "Failed to add menu item" });
   }
 });
-
+*/
 // update item
 app.put("/api/admin/menu/update/:id", async (req, res) => {
   const { id } = req.params;
