@@ -5,7 +5,7 @@ const db = require("../db.js");
 const { uploadToBlob, deleteFromBlob, generateSasUrl } = require("./blobServices.js");
 
 const router = express.Router();
-const upload = multer(); // Handle multipart/form-data uploads
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ✅ Add new menu item
 router.post("/add", upload.single("image"), async (req, res) => {
