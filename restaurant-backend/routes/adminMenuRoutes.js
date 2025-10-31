@@ -14,7 +14,6 @@ const upload = multer({ storage: multer.memoryStorage() });
  */
 router.post("/add", upload.single("image"), async (req, res) => {
   try {
-    // multer will populate req.body (text fields) and req.file (if present)
     const { name, category, price, in_stock } = req.body;
     let imageUrl = null;
 
@@ -35,28 +34,27 @@ router.post("/add", upload.single("image"), async (req, res) => {
 });
 
 /**
- * GET /menu
- * returns all menu rows; if image exists, return SAS-protected URL (if container private)
+ * GET /
+ * returns all in-stock menu items; generates SAS URLs if needed
  */
-router.get("/menu", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM menu");
+    const [rows] = await db.query("SELECT * FROM menu WHERE in_stock = 1 ORDER BY category");
     const items = rows.map((item) => {
       if (item.image) {
-        // the 'image' column currently stores blob URL; extract blob name and generate SAS
         try {
           const blobName = item.image.split("/").pop().split("?")[0];
           item.image = generateSasUrl(blobName);
         } catch (e) {
-          // fallback: keep stored URL
+          // keep stored URL if parsing fails
         }
       }
       return item;
     });
     res.json(items);
   } catch (err) {
-    console.error("adminMenuRoutes.menu error:", err);
-    res.status(500).send("Server error");
+    console.error("adminMenuRoutes.get error:", err);
+    res.status(500).send("Server error while fetching menu");
   }
 });
 
