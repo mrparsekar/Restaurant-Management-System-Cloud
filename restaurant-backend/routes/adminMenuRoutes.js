@@ -37,7 +37,7 @@ router.post("/add", upload.single("image"), async (req, res) => {
  * GET /
  * returns all in-stock menu items; generates SAS URLs if needed
  */
-router.get("/", async (req, res) => {
+router.get("/menu", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT * FROM menu WHERE in_stock = 1 ORDER BY category");
     const items = rows.map((item) => {
