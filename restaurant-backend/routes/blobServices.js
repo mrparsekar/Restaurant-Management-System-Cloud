@@ -1,7 +1,8 @@
 // backend/routes/blobServices.js
-const { BlobServiceClient, generateBlobSASQueryParameters, BlobSASPermissions } = require("@azure/storage-blob");
+const { BlobServiceClient, generateBlobSASQueryParameters, BlobSASPermissions, StorageSharedKeyCredential } = require("@azure/storage-blob");
 const { v4: uuidv4 } = require("uuid");
 
+// Required env vars
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const CONTAINER_NAME = process.env.AZURE_STORAGE_CONTAINER || "menu-images";
 
@@ -12,7 +13,7 @@ if (!AZURE_STORAGE_CONNECTION_STRING) {
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
 const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
 
-// Ensure container exists (safe to call on startup)
+// Make sure container exists
 async function ensureContainer() {
   try {
     const exists = await containerClient.exists();
@@ -23,21 +24,22 @@ async function ensureContainer() {
 }
 ensureContainer().catch(() => {});
 
+// ✅ Upload function (same)
 async function uploadToBlob(file) {
-  // file expected from multer: { originalname, buffer, mimetype }
-  const blobName = `${Date.now()}-${uuidv4()}-${file.originalname.replace(/\s+/g, '-')}`;
+  const blobName = `${Date.now()}-${uuidv4()}-${file.originalname.replace(/\s+/g, "-")}`;
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
   await blockBlobClient.uploadData(file.buffer, {
     blobHTTPHeaders: { blobContentType: file.mimetype || "application/octet-stream" },
   });
 
-  // store the full URL (we'll generate SAS when serving if account is private)
-  return blockBlobClient.url;
+  return blockBlobClient.url; // full URL stored in DB
 }
 
-async function deleteFromBlob(blobName) {
+// ✅ Delete function (same)
+async function deleteFromBlob(blobNameOrUrl) {
   try {
+    const blobName = blobNameOrUrl.split("/").pop().split("?")[0]; // extract name if full URL
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     await blockBlobClient.deleteIfExists();
     console.log(`Deleted blob ${blobName}`);
@@ -46,19 +48,21 @@ async function deleteFromBlob(blobName) {
   }
 }
 
-// Generate SAS URL (1 hour) for private containers
-function generateSasUrl(blobName) {
+// ✅ Generate SAS URL safely
+function generateSasUrl(blobNameOrUrl) {
   try {
+    // Extract just the blob name from full URL
+    const blobName = blobNameOrUrl.split("/").pop().split("?")[0];
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-    const expiresOn = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    // NOTE: generateBlobSASQueryParameters requires a StorageSharedKeyCredential,
-    // which is accessible via blobServiceClient.credential if connection string used.
+    const expiresOn = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
+
     const sasToken = generateBlobSASQueryParameters(
       {
         containerName: CONTAINER_NAME,
         blobName,
         permissions: BlobSASPermissions.parse("r"),
+        startsOn: new Date(),
         expiresOn,
       },
       blobServiceClient.credential
@@ -66,13 +70,9 @@ function generateSasUrl(blobName) {
 
     return `${blockBlobClient.url}?${sasToken}`;
   } catch (err) {
-    console.warn("generateSasUrl failed, returning blob url without SAS:", err.message);
-    return containerClient.getBlockBlobClient(blobName).url;
+    console.warn("generateSasUrl failed, returning original URL:", err.message);
+    return blobNameOrUrl; // fallback
   }
 }
 
-module.exports = {
-  uploadToBlob,
-  deleteFromBlob,
-  generateSasUrl,
-};
+module.exports = { uploadToBlob, deleteFromBlob, generateSasUrl };
