@@ -1,8 +1,13 @@
 // backend/routes/blobServices.js
-const { BlobServiceClient, generateBlobSASQueryParameters, BlobSASPermissions, StorageSharedKeyCredential } = require("@azure/storage-blob");
+const {
+  BlobServiceClient,
+  generateBlobSASQueryParameters,
+  BlobSASPermissions,
+  StorageSharedKeyCredential
+} = require("@azure/storage-blob");
 const { v4: uuidv4 } = require("uuid");
+const { parseConnectionString } = require("@azure/core-auth");
 
-// Required env vars
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
 const CONTAINER_NAME = process.env.AZURE_STORAGE_CONTAINER || "menu-images";
 
@@ -10,10 +15,20 @@ if (!AZURE_STORAGE_CONNECTION_STRING) {
   throw new Error("Missing AZURE_STORAGE_CONNECTION_STRING in environment");
 }
 
+// --- extract account name and key manually ---
+function getAccountInfoFromConnectionString(connectionString) {
+  const accountName = connectionString.match(/AccountName=([^;]+)/)[1];
+  const accountKey = connectionString.match(/AccountKey=([^;]+)/)[1];
+  return { accountName, accountKey };
+}
+
+const { accountName, accountKey } = getAccountInfoFromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
+const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey);
+
 const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING);
 const containerClient = blobServiceClient.getContainerClient(CONTAINER_NAME);
 
-// Make sure container exists
+// Ensure container exists (safe to call on startup)
 async function ensureContainer() {
   try {
     const exists = await containerClient.exists();
@@ -24,22 +39,21 @@ async function ensureContainer() {
 }
 ensureContainer().catch(() => {});
 
-// ✅ Upload function (same)
+// Upload a file to blob storage
 async function uploadToBlob(file) {
-  const blobName = `${Date.now()}-${uuidv4()}-${file.originalname.replace(/\s+/g, "-")}`;
+  const blobName = `${Date.now()}-${uuidv4()}-${file.originalname.replace(/\s+/g, '-')}`;
   const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
   await blockBlobClient.uploadData(file.buffer, {
     blobHTTPHeaders: { blobContentType: file.mimetype || "application/octet-stream" },
   });
 
-  return blockBlobClient.url; // full URL stored in DB
+  return blockBlobClient.url; // we’ll later generate SAS when reading
 }
 
-// ✅ Delete function (same)
-async function deleteFromBlob(blobNameOrUrl) {
+// Delete a blob
+async function deleteFromBlob(blobName) {
   try {
-    const blobName = blobNameOrUrl.split("/").pop().split("?")[0]; // extract name if full URL
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
     await blockBlobClient.deleteIfExists();
     console.log(`Deleted blob ${blobName}`);
@@ -48,31 +62,30 @@ async function deleteFromBlob(blobNameOrUrl) {
   }
 }
 
-// ✅ Generate SAS URL safely
-function generateSasUrl(blobNameOrUrl) {
+// ✅ Generate a SAS URL (readable for 1 hour)
+function generateSasUrl(blobName) {
   try {
-    // Extract just the blob name from full URL
-    const blobName = blobNameOrUrl.split("/").pop().split("?")[0];
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-
-    const expiresOn = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
-
+    const expiresOn = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     const sasToken = generateBlobSASQueryParameters(
       {
         containerName: CONTAINER_NAME,
         blobName,
         permissions: BlobSASPermissions.parse("r"),
-        startsOn: new Date(),
         expiresOn,
       },
-      blobServiceClient.credential
+      sharedKeyCredential
     ).toString();
 
-    return `${blockBlobClient.url}?${sasToken}`;
+    const blobUrl = `https://${accountName}.blob.core.windows.net/${CONTAINER_NAME}/${blobName}?${sasToken}`;
+    return blobUrl;
   } catch (err) {
-    console.warn("generateSasUrl failed, returning original URL:", err.message);
-    return blobNameOrUrl; // fallback
+    console.warn("generateSasUrl failed:", err.message);
+    return containerClient.getBlockBlobClient(blobName).url;
   }
 }
 
-module.exports = { uploadToBlob, deleteFromBlob, generateSasUrl };
+module.exports = {
+  uploadToBlob,
+  deleteFromBlob,
+  generateSasUrl,
+};
