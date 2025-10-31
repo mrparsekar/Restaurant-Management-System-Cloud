@@ -32,6 +32,8 @@ async function tryInsertMultiple(insertFns = []) {
    ------------------------------ */
 // ✅ Admin Menu routes (includes blob upload/delete internally)
 app.use("/api/adminmenu", adminMenuRoutes);
+app.use('/api/adminmenu/menu', adminMenuRoutes);
+
 
 app.get("/", (req, res) => {
   res.send("✅ Restaurant Backend API is running successfully!");
