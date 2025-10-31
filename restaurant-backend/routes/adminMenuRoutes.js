@@ -15,16 +15,16 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post("/add", upload.single("image"), async (req, res) => {
   try {
     const { name, category, price, in_stock } = req.body;
-    let imageUrl = null;
+    let blobName = null;
 
-    // ✅ If image file uploaded, push it to blob
+    // ✅ Upload image to Azure Blob (if any)
     if (req.file) {
-      imageUrl = await uploadToBlob(req.file);
+      blobName = await uploadToBlob(req.file); // Returns blob name only
     }
 
     await db.query(
       "INSERT INTO menu (name, category, price, image, in_stock) VALUES (?, ?, ?, ?, ?)",
-      [name, category, price, imageUrl, in_stock ?? 1]
+      [name, category, price, blobName, in_stock ?? 1]
     );
 
     res.status(200).json({ message: "Menu item added successfully" });
@@ -37,7 +37,7 @@ router.post("/add", upload.single("image"), async (req, res) => {
 /**
  * GET /api/adminmenu/menu
  * returns all menu items (admin view)
- * generates SAS URLs if needed
+ * generates temporary SAS URLs for private blob access
  */
 router.get("/menu", async (req, res) => {
   try {
@@ -45,11 +45,11 @@ router.get("/menu", async (req, res) => {
 
     const items = rows.map((item) => {
       if (item.image) {
+        // item.image now stores only blob name (not URL)
         try {
-          const blobName = item.image.split("/").pop().split("?")[0];
-          item.image = generateSasUrl(blobName);
+          item.image = generateSasUrl(item.image);
         } catch (e) {
-          // fallback if SAS fails
+          console.warn("SAS generation failed:", e.message);
         }
       }
       return item;
@@ -65,6 +65,7 @@ router.get("/menu", async (req, res) => {
 /**
  * GET /api/adminmenu/public-menu
  * for customer menu — only in-stock items
+ * also generates SAS URLs
  */
 router.get("/public-menu", async (req, res) => {
   try {
@@ -73,9 +74,10 @@ router.get("/public-menu", async (req, res) => {
     const items = rows.map((item) => {
       if (item.image) {
         try {
-          const blobName = item.image.split("/").pop().split("?")[0];
-          item.image = generateSasUrl(blobName);
-        } catch (e) {}
+          item.image = generateSasUrl(item.image);
+        } catch (e) {
+          console.warn("SAS generation failed:", e.message);
+        }
       }
       return item;
     });
@@ -95,8 +97,7 @@ router.delete("/delete/:id", async (req, res) => {
   try {
     const [[item]] = await db.query("SELECT image FROM menu WHERE item_id = ?", [req.params.id]);
     if (item && item.image) {
-      const blobName = item.image.split("/").pop().split("?")[0];
-      await deleteFromBlob(blobName);
+      await deleteFromBlob(item.image); // blob name stored directly
     }
 
     await db.query("DELETE FROM menu WHERE item_id = ?", [req.params.id]);
