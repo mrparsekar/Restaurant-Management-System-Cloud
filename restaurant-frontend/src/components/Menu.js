@@ -13,7 +13,7 @@ const Menu = ({ setCartCount }) => {
 
   useEffect(() => {
     // Fetch menu items
-    fetch("https://restaurant-cloud-backend.azurewebsites.net/menu")
+    fetch("https://restaurant-cloud-backend.azurewebsites.net/api/admin/menu")
       .then((res) => res.json())
       .then((data) => {
         console.log("Menu data fetched:", data);
