@@ -228,9 +228,11 @@ This project is licensed under the MIT License — feel free to modify and use i
 🌐 Live Demo
 
 🔗 (Deployed on Azure links here)
+
 Frontend: https://restaurant-cloud-frontend-h3c2f2f4dfb4fjdd.centralindia-01.azurewebsites.net/
 
 Backend API: https://restaurant-cloud-backend.azurewebsites.net/
+
 
 
 
