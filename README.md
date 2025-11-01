@@ -216,7 +216,9 @@ Shreyash Parsekar (MCA Cloud Computing Project 2025)
 Built using: React.js • Node.js • MySQL • Azure Cloud
 
 Admin Credentials:
+
 username: admin
+
 password: gourmethaven@123
 
 📄 License
@@ -229,4 +231,5 @@ This project is licensed under the MIT License — feel free to modify and use i
 Frontend: https://restaurant-cloud-frontend-h3c2f2f4dfb4fjdd.centralindia-01.azurewebsites.net/
 
 Backend API: https://restaurant-cloud-backend.azurewebsites.net/
+
 
